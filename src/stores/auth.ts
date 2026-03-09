@@ -55,5 +55,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, loading, isAuthenticated, hasCouple, fullName, handleCallback, fetchMe, logout, restoreSession }
+  // Usado após login/registro local — salva tokens sem precisar de outro request
+  function setTokens(accessToken: string, refreshToken: string) {
+    localStorage.setItem('access_token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
+  }
+
+  function setUser(u: UserInfo) {
+    user.value = u
+  }
+
+  return { user, loading, isAuthenticated, hasCouple, fullName, handleCallback, fetchMe, logout, restoreSession, setTokens, setUser }
 })
