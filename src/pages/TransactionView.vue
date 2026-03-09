@@ -1,38 +1,41 @@
 <template>
-  <div class="p-8 space-y-6">
+  <div class="p-4 lg:p-8 space-y-4 lg:space-y-6">
 
     <!-- Toolbar -->
-    <div class="flex items-center gap-3 flex-wrap">
+    <div class="flex flex-col gap-3">
 
-      <!-- Busca / filtro de tipo -->
-      <div class="flex items-center gap-2 flex-1">
-        <button
-          v-for="opt in typeFilter"
-          :key="opt.value"
-          @click="filters.type = filters.type === opt.value ? undefined : opt.value"
-          class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 border"
-          :class="filters.type === opt.value
-            ? opt.activeClass
-            : 'bg-white border-surface-200 text-surface-600 hover:border-surface-300'"
-        >
-          {{ opt.label }}
-        </button>
+      <!-- Linha 1: filtros de tipo + botão nova -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5">
+          <button
+            v-for="opt in typeFilter"
+            :key="String(opt.value)"
+            @click="filters.type = filters.type === opt.value ? undefined : opt.value"
+            class="px-3 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-medium transition-all duration-150 border"
+            :class="filters.type === opt.value
+              ? opt.activeClass
+              : 'bg-white border-surface-200 text-surface-600 hover:border-surface-300'"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+
+        <Button
+          label="Nova"
+          icon="pi pi-plus"
+          @click="openCreate"
+          class="shrink-0"
+          size="small"
+        />
       </div>
 
-      <!-- Mês -->
+      <!-- Linha 2: mês -->
       <select
         v-model="selectedMonth"
-        class="text-sm border border-surface-200 rounded-xl px-3 py-2 bg-white text-surface-700 focus:outline-none focus:border-surface-400"
+        class="w-full sm:w-auto text-sm border border-surface-200 rounded-xl px-3 py-2 bg-white text-surface-700 focus:outline-none focus:border-surface-400"
       >
         <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
       </select>
-
-      <!-- Nova transação -->
-      <Button
-        label="Nova transação"
-        icon="pi pi-plus"
-        @click="openCreate"
-      />
     </div>
 
     <!-- Table -->
@@ -41,7 +44,7 @@
       <!-- Skeleton -->
       <template v-if="loading">
         <div class="divide-y divide-surface-50">
-          <div v-for="i in 8" :key="i" class="flex items-center gap-4 px-6 py-4">
+          <div v-for="i in 8" :key="i" class="flex items-center gap-4 px-4 lg:px-6 py-4">
             <div class="w-9 h-9 rounded-xl bg-surface-100 animate-pulse shrink-0" />
             <div class="flex-1 space-y-2">
               <div class="h-3.5 bg-surface-100 rounded animate-pulse w-1/3" />
@@ -63,7 +66,7 @@
         <li
           v-for="tx in page.content"
           :key="tx.id"
-          class="flex items-center gap-4 px-6 py-4 hover:bg-surface-50/60 transition-colors group"
+          class="flex items-center gap-3 lg:gap-4 px-4 lg:px-6 py-3 lg:py-4 hover:bg-surface-50/60 transition-colors group"
         >
           <!-- Ícone -->
           <div
@@ -78,39 +81,61 @@
             <p class="text-sm font-medium text-surface-800 truncate">
               {{ tx.description || tx.categoryLabel }}
             </p>
-            <p class="text-xs text-surface-400 mt-0.5">
-              {{ formatDate(tx.date) }}
-              <span class="mx-1">·</span>
-              {{ tx.categoryLabel }}
-              <span class="mx-1">·</span>
-              {{ tx.createdBy.firstName }}
-              <span v-if="tx.recurring" class="ml-1.5 text-surface-400">
-                <i class="pi pi-sync text-xs" />
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span class="text-xs text-surface-400">{{ formatDate(tx.date) }}</span>
+              <span class="text-surface-200 text-xs">·</span>
+              <!-- Avatar + nome do autor (compacto em mobile) -->
+              <span class="flex items-center gap-1">
+                <img
+                  v-if="tx.createdBy.avatarUrl"
+                  :src="tx.createdBy.avatarUrl"
+                  :alt="tx.createdBy.firstName"
+                  class="w-4 h-4 rounded-full object-cover"
+                />
+                <div
+                  v-else
+                  class="w-4 h-4 rounded-full bg-surface-200 flex items-center justify-center"
+                >
+                  <span class="text-surface-600 text-[8px] font-medium">{{ tx.createdBy.firstName[0] }}</span>
+                </div>
+                <span class="text-xs text-surface-400">{{ tx.createdBy.firstName }}</span>
               </span>
-            </p>
+              <span v-if="tx.recurring" class="text-surface-200 text-xs">·</span>
+              <i v-if="tx.recurring" class="pi pi-sync text-surface-300 text-[10px]" />
+            </div>
           </div>
 
-          <!-- Valor -->
-          <span
-            class="font-mono text-sm font-medium shrink-0"
-            :class="tx.type === 'INCOME' ? 'text-green-600' : 'text-red-500'"
-          >
-            {{ tx.type === 'INCOME' ? '+' : '−' }} {{ formatCurrency(tx.amount) }}
-          </span>
+          <!-- Valor + ações -->
+          <div class="flex items-center gap-1 shrink-0">
+            <span
+              class="font-mono text-sm font-medium"
+              :class="tx.type === 'INCOME' ? 'text-green-600' : 'text-red-500'"
+            >
+              {{ tx.type === 'INCOME' ? '+' : '−' }} {{ formatCurrency(tx.amount) }}
+            </span>
 
-          <!-- Ações (aparecem no hover) -->
-          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <!-- Ações (hover em desktop, sempre visível em mobile via tap) -->
+            <div class="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity lg:flex hidden">
+              <button
+                @click="openEdit(tx)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors"
+              >
+                <i class="pi pi-pencil text-xs" />
+              </button>
+              <button
+                @click="confirmDelete(tx)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+              >
+                <i class="pi pi-trash text-xs" />
+              </button>
+            </div>
+
+            <!-- Menu mobile (3 pontos) -->
             <button
-              @click="openEdit(tx)"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors"
+              class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-surface-300"
+              @click="openMobileMenu(tx)"
             >
-              <i class="pi pi-pencil text-xs" />
-            </button>
-            <button
-              @click="confirmDelete(tx)"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-            >
-              <i class="pi pi-trash text-xs" />
+              <i class="pi pi-ellipsis-v text-xs" />
             </button>
           </div>
         </li>
@@ -119,10 +144,10 @@
       <!-- Paginação -->
       <div
         v-if="page.totalPages > 1"
-        class="flex items-center justify-between px-6 py-4 border-t border-surface-100"
+        class="flex items-center justify-between px-4 lg:px-6 py-4 border-t border-surface-100"
       >
         <p class="text-xs text-surface-400">
-          {{ page.totalElements }} transações · página {{ page.number + 1 }} de {{ page.totalPages }}
+          {{ page.totalElements }} transações · pág. {{ page.number + 1 }}/{{ page.totalPages }}
         </p>
         <div class="flex items-center gap-1">
           <button
@@ -148,8 +173,8 @@
       v-model:visible="showDialog"
       :header="editingTx ? 'Editar transação' : 'Nova transação'"
       :modal="true"
-      :style="{ width: '480px' }"
-      :pt="{ content: { class: 'p-6' }, header: { class: 'px-6 pt-6 pb-0' } }"
+      :style="{ width: 'min(480px, 95vw)' }"
+      :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }"
     >
       <TransactionForm
         :transaction="editingTx ?? undefined"
@@ -158,6 +183,39 @@
         @cancel="showDialog = false"
         :loading="submitting"
       />
+    </Dialog>
+
+    <!-- Bottom sheet mobile: ações de transação -->
+    <Dialog
+      v-model:visible="showMobileMenu"
+      :modal="true"
+      :showHeader="false"
+      :style="{ width: '100vw', margin: 0, borderRadius: '16px 16px 0 0', position: 'fixed', bottom: 0 }"
+      :pt="{ root: { style: 'align-items: flex-end' }, content: { class: 'p-4' } }"
+    >
+      <div v-if="mobileMenuTx" class="space-y-1">
+        <p class="text-sm font-medium text-surface-700 mb-3 px-1">
+          {{ mobileMenuTx.description || mobileMenuTx.categoryLabel }}
+        </p>
+        <button
+          @click="openEdit(mobileMenuTx!); showMobileMenu = false"
+          class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-surface-700 hover:bg-surface-50 transition-colors"
+        >
+          <i class="pi pi-pencil text-surface-400" /> Editar
+        </button>
+        <button
+          @click="confirmDelete(mobileMenuTx!); showMobileMenu = false"
+          class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <i class="pi pi-trash" /> Excluir
+        </button>
+        <button
+          @click="showMobileMenu = false"
+          class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-surface-400 hover:bg-surface-50 transition-colors"
+        >
+          <i class="pi pi-times text-surface-300" /> Cancelar
+        </button>
+      </div>
     </Dialog>
 
     <!-- Confirm delete -->
@@ -173,6 +231,7 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { transactionService, categoryService } from '@/services'
+import type { CreateTransactionPayload } from '@/services'
 import type { TransactionResponse, CategoryResponse, TransactionType, TransactionCategory, Page } from '@/types'
 import TransactionForm from './TransactionForm.vue'
 
@@ -182,8 +241,8 @@ const toast   = useToast()
 // ── Filtros ───────────────────────────────────────────────────────────────────
 
 const typeFilter = [
-  { label: 'Todas',    value: undefined,   activeClass: 'bg-surface-900 text-white border-surface-900' },
-  { label: 'Receitas', value: 'INCOME' as TransactionType,  activeClass: 'bg-green-600 text-white border-green-600' },
+  { label: 'Todas',    value: undefined,                    activeClass: 'bg-surface-900 text-white border-surface-900' },
+  { label: 'Receitas', value: 'INCOME'  as TransactionType, activeClass: 'bg-green-600 text-white border-green-600' },
   { label: 'Despesas', value: 'EXPENSE' as TransactionType, activeClass: 'bg-red-500 text-white border-red-500' }
 ]
 
@@ -216,9 +275,9 @@ const dateRange = computed(() => {
 // ── Dados ─────────────────────────────────────────────────────────────────────
 
 const emptyPage: Page<TransactionResponse> = { content: [], totalElements: 0, totalPages: 0, number: 0, size: 15, first: true, last: true }
-const page       = ref<Page<TransactionResponse>>(emptyPage)
-const categories = ref<CategoryResponse[]>([])
-const loading    = ref(false)
+const page        = ref<Page<TransactionResponse>>(emptyPage)
+const categories  = ref<CategoryResponse[]>([])
+const loading     = ref(false)
 const currentPage = ref(0)
 
 async function loadTransactions() {
@@ -230,13 +289,19 @@ async function loadTransactions() {
       page: currentPage.value,
       size: 15
     })
+  } catch {
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as transações.', life: 4000 })
   } finally {
     loading.value = false
   }
 }
 
 async function loadCategories() {
-  categories.value = await categoryService.list()
+  try {
+    categories.value = await categoryService.list()
+  } catch {
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as categorias.', life: 4000 })
+  }
 }
 
 function goPage(n: number) {
@@ -244,6 +309,7 @@ function goPage(n: number) {
 }
 
 onMounted(() => { loadTransactions(); loadCategories() })
+watch([selectedMonth, filters], () => { currentPage.value = 0 })
 watch([selectedMonth, filters, currentPage], loadTransactions)
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
@@ -255,7 +321,7 @@ const submitting = ref(false)
 function openCreate() { editingTx.value = null; showDialog.value = true }
 function openEdit(tx: TransactionResponse) { editingTx.value = tx; showDialog.value = true }
 
-async function handleSubmit(payload: any) {
+async function handleSubmit(payload: CreateTransactionPayload) {
   submitting.value = true
   try {
     if (editingTx.value) {
@@ -267,8 +333,9 @@ async function handleSubmit(payload: any) {
     }
     showDialog.value = false
     await loadTransactions()
-  } catch (e: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: e?.response?.data?.detail ?? 'Tente novamente.', life: 4000 })
+  } catch (e: unknown) {
+    const detail = (e as import('axios').AxiosError<{ detail?: string }>)?.response?.data?.detail ?? 'Tente novamente.'
+    toast.add({ severity: 'error', summary: 'Erro', detail, life: 4000 })
   } finally {
     submitting.value = false
   }
@@ -283,11 +350,25 @@ function confirmDelete(tx: TransactionResponse) {
     acceptLabel: 'Remover',
     acceptClass: 'p-button-danger',
     accept: async () => {
-      await transactionService.delete(tx.id)
-      toast.add({ severity: 'success', summary: 'Removido', detail: 'Transação removida.', life: 3000 })
-      await loadTransactions()
+      try {
+        await transactionService.delete(tx.id)
+        toast.add({ severity: 'success', summary: 'Removido', detail: 'Transação removida.', life: 3000 })
+        await loadTransactions()
+      } catch {
+        toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível remover a transação.', life: 4000 })
+      }
     }
   })
+}
+
+// ── Mobile menu ───────────────────────────────────────────────────────────────
+
+const showMobileMenu = ref(false)
+const mobileMenuTx   = ref<TransactionResponse | null>(null)
+
+function openMobileMenu(tx: TransactionResponse) {
+  mobileMenuTx.value  = tx
+  showMobileMenu.value = true
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -295,8 +376,9 @@ function confirmDelete(tx: TransactionResponse) {
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
-function formatDate(d: string) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+
+function formatDate(date: string) {
+  return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
 const categoryIconMap: Partial<Record<TransactionCategory, string>> = {
@@ -309,6 +391,7 @@ const categoryIconMap: Partial<Record<TransactionCategory, string>> = {
   INVESTMENTS: 'pi pi-chart-bar', RENTAL: 'pi pi-building',
   GIFT: 'pi pi-gift',           OTHER_INCOME: 'pi pi-plus-circle'
 }
+
 function categoryIcon(cat: TransactionCategory) {
   return categoryIconMap[cat] ?? 'pi pi-circle'
 }

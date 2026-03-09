@@ -1,10 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
+import type { AxiosError } from 'axios'
+
+function apiMessage(e: unknown, fallback: string): string {
+  return (e as AxiosError<{ detail?: string }>)?.response?.data?.detail ?? fallback
+}
 import { transactionService, categoryService } from '@/services'
 import type {
   TransactionResponse,
   CategoryResponse,
-  TransactionType,
   Page
 } from '@/types'
 import type { CreateTransactionPayload, TransactionFilters } from '@/services'
@@ -43,8 +47,8 @@ export const useTransactionStore = defineStore('transaction', () => {
     error.value   = null
     try {
       page.value = await transactionService.list({ ...filters, ...overrides })
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao carregar transações'
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao carregar transações')
     } finally {
       loading.value = false
     }
@@ -67,8 +71,8 @@ export const useTransactionStore = defineStore('transaction', () => {
       // Recarrega a página atual para refletir o novo item
       await fetchTransactions()
       return created
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao criar transação'
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao criar transação')
       throw e
     } finally {
       submitting.value = false
@@ -84,8 +88,8 @@ export const useTransactionStore = defineStore('transaction', () => {
       const idx = page.value.content.findIndex(t => t.id === id)
       if (idx !== -1) page.value.content[idx] = updated
       return updated
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao atualizar transação'
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao atualizar transação')
       throw e
     } finally {
       submitting.value = false
@@ -93,15 +97,21 @@ export const useTransactionStore = defineStore('transaction', () => {
   }
 
   async function remove(id: string): Promise<void> {
-    error.value = null
+    submitting.value = true
+    error.value      = null
     try {
       await transactionService.delete(id)
       // Remove da lista local imediatamente (optimistic)
-      page.value.content = page.value.content.filter(t => t.id !== id)
-      page.value.totalElements = Math.max(0, page.value.totalElements - 1)
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao remover transação'
+      page.value.content      = page.value.content.filter(t => t.id !== id)
+      const newTotal          = Math.max(0, page.value.totalElements - 1)
+      page.value.totalElements = newTotal
+      page.value.totalPages   = Math.max(1, Math.ceil(newTotal / page.value.size))
+      page.value.last         = (page.value.number + 1) >= page.value.totalPages
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao remover transação')
       throw e
+    } finally {
+      submitting.value = false
     }
   }
 
