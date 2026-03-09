@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // ── Rotas públicas ────────────────────────────────────────────────────────
     {
       path: '/login',
       name: 'login',
@@ -19,68 +20,84 @@ const router = createRouter({
       name: 'invite',
       component: () => import('@/pages/CoupleView.vue')
     },
+
+    // ── Rotas protegidas ──────────────────────────────────────────────────────
     {
       path: '/',
       component: () => import('@/pages/AppLayout.vue'),
       children: [
-        { path: '', redirect: { name: 'dashboard' } },
-        { path: 'dashboard',    name: 'dashboard',    component: () => import('@/pages/DashboardView.vue') },
-        { path: 'transactions', name: 'transactions', component: () => import('@/pages/TransactionView.vue') },
-        { path: 'couple',       name: 'couple',       component: () => import('@/pages/CoupleView.vue') }
+        {
+          path: '',
+          redirect: { name: 'dashboard' }
+        },
+        {
+          path: 'dashboard',
+          name: 'dashboard',
+          component: () => import('@/pages/DashboardView.vue')
+        },
+        {
+          path: 'transactions',
+          name: 'transactions',
+          component: () => import('@/pages/TransactionView.vue')
+        },
+        {
+          path: 'couple',
+          name: 'couple',
+          component: () => import('@/pages/CoupleView.vue')
+        }
       ]
     },
-    { path: '/:pathMatch(.*)*', redirect: { name: 'login' } }
+
+    // ── 404 ───────────────────────────────────────────────────────────────────
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: { name: 'login' }
+    }
   ]
 })
 
-const PUBLIC_ROUTES  = new Set(['login', 'auth-callback', 'invite'])
+// ── Rotas que não precisam de autenticação ────────────────────────────────────
+const PUBLIC_ROUTES = new Set(['login', 'auth-callback', 'invite'])
+
+// ── Rotas que precisam de casal vinculado ─────────────────────────────────────
 const REQUIRES_COUPLE = new Set(['dashboard', 'transactions'])
 
 let sessionRestored = false
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  const routeName = to.name as string | undefined
 
-  console.log('[GUARD]', {
-    to: to.fullPath,
-    name: routeName,
-    isAuthenticated: auth.isAuthenticated,
-    hasCouple: auth.hasCouple,
-    hasToken: !!localStorage.getItem('access_token'),
-    sessionRestored
-  })
-
+  // Restaura sessão apenas uma vez por carregamento da app
   if (!sessionRestored) {
     sessionRestored = true
     if (localStorage.getItem('access_token')) {
-      console.log('[GUARD] restoring session...')
       await auth.restoreSession()
-      console.log('[GUARD] session restored:', { isAuthenticated: auth.isAuthenticated, hasCouple: auth.hasCouple })
     }
   }
 
+  const routeName = to.name as string | undefined
+
+  // Rotas públicas — sempre passam
   if (routeName && PUBLIC_ROUTES.has(routeName)) {
+    // Evita que usuário autenticado volte ao login
     if (routeName === 'login' && auth.isAuthenticated) {
-      const dest = auth.hasCouple ? 'dashboard' : 'couple'
-      console.log('[GUARD] authenticated on login → redirect to', dest)
-      return { name: dest }
+      const redirect = to.query.redirect as string | undefined
+      if (redirect) return redirect
+      return { name: auth.hasCouple ? 'dashboard' : 'couple' }
     }
-    console.log('[GUARD] public route → allow')
     return true
   }
 
+  // Qualquer rota protegida sem autenticação → login (salva destino para voltar depois)
   if (!auth.isAuthenticated) {
-    console.log('[GUARD] not authenticated → login')
-    return { name: 'login' }
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
 
+  // Rotas que exigem casal → couple
   if (REQUIRES_COUPLE.has(routeName ?? '') && !auth.hasCouple) {
-    console.log('[GUARD] no couple → couple')
     return { name: 'couple' }
   }
 
-  console.log('[GUARD] allow')
   return true
 })
 

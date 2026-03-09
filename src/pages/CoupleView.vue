@@ -1,8 +1,36 @@
 <template>
   <div class="p-8 max-w-2xl mx-auto space-y-6">
 
+    <!-- Fluxo de aceitar convite via link -->
+    <template v-if="joinToken">
+      <div class="card text-center py-10">
+        <template v-if="joinSuccess">
+          <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+            <i class="pi pi-check text-green-600 text-xl" />
+          </div>
+          <h2 class="font-display text-xl font-bold text-surface-900 mb-2">Conta vinculada!</h2>
+          <p class="text-surface-500 text-sm">Redirecionando para o painel...</p>
+        </template>
+        <template v-else-if="joinError">
+          <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <i class="pi pi-times text-red-500 text-xl" />
+          </div>
+          <h2 class="font-display text-xl font-bold text-surface-900 mb-2">Convite inválido</h2>
+          <p class="text-surface-500 text-sm mb-6">{{ joinError }}</p>
+          <Button label="Voltar ao início" size="small" @click="router.push('/couple')" />
+        </template>
+        <template v-else>
+          <div class="w-14 h-14 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-4">
+            <i class="pi pi-spin pi-spinner text-primary-500 text-xl" />
+          </div>
+          <h2 class="font-display text-xl font-bold text-surface-900 mb-2">Aceitando convite...</h2>
+          <p class="text-surface-500 text-sm">Vinculando sua conta ao casal.</p>
+        </template>
+      </div>
+    </template>
+
     <!-- Sem casal: criar conta -->
-    <template v-if="!coupleStore.couple">
+    <template v-else-if="!coupleStore.couple">
       <div class="text-center py-8">
         <div class="w-16 h-16 rounded-2xl bg-surface-100 flex items-center justify-center mx-auto mb-5">
           <i class="pi pi-users text-surface-400 text-2xl" />
@@ -49,7 +77,7 @@
             </h2>
           </div>
           <button
-            @click="editingName = true"
+            @click="startEdit()"
             class="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:bg-surface-50 hover:text-surface-700 transition-colors"
           >
             <i class="pi pi-pencil text-sm" />
@@ -156,15 +184,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import { useCoupleStore } from '@/stores/couple'
 import { useAuthStore } from '@/stores/auth'
+import { useRoute, useRouter } from 'vue-router'
 import { coupleService } from '@/services'
 
 const coupleStore = useCoupleStore()
 const authStore   = useAuthStore()
+const route       = useRoute()
+const router      = useRouter()
+
+// Estado do fluxo de aceitar convite via link
+const joinToken    = computed(() => route.params.token as string | undefined)
+const joinLoading  = ref(false)
+const joinError    = ref<string | null>(null)
+const joinSuccess  = ref(false)
 
 // Criar casal
 const newCoupleName = ref('')
@@ -214,7 +251,33 @@ async function sendInvite() {
   }
 }
 
+async function acceptInvite() {
+  if (!joinToken.value) return
+  joinLoading.value = true
+  joinError.value   = null
+  try {
+    await coupleStore.join(joinToken.value)
+    // Atualiza o JWT para refletir o novo coupleId
+    await authStore.fetchMe()
+    joinSuccess.value = true
+    setTimeout(() => router.push('/dashboard'), 2000)
+  } catch (e) {
+    joinError.value = e instanceof Error ? e.message : 'Erro ao aceitar convite'
+  } finally {
+    joinLoading.value = false
+  }
+}
+
 onMounted(async () => {
+  if (joinToken.value) {
+    // Usuário chegou via link de convite — aceita automaticamente se autenticado
+    if (authStore.isAuthenticated) {
+      await acceptInvite()
+    }
+    // Se não autenticado, o guard vai redirecionar para /login e voltar aqui após
+    return
+  }
+
   if (authStore.hasCouple && !coupleStore.couple) {
     await coupleStore.fetchCouple()
   }
