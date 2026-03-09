@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg:         #f8f8f7;
+    --color-surface:    #ffffff;
+    --color-border:     #e4e2df;
+    --color-text:       #252320;
+    --color-text-muted: #888279;
+    --color-primary:    #22c55e;
+    --color-income:     #22c55e;
+    --color-expense:    #ef4444;
+    --shadow-card:      0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+    --shadow-elevated:  0 4px 24px -4px rgb(0 0 0 / 0.1);
+  }
+
+  html { @apply antialiased; }
+
+  body {
+    @apply bg-surface-50 text-surface-900 font-sans;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 { @apply font-display tracking-tight; }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl border border-surface-200 p-6;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-elevated {
+    @apply bg-white rounded-2xl;
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .amount-income  { @apply text-green-600 font-mono font-medium; }
+  .amount-expense { @apply text-red-500 font-mono font-medium; }
+  .amount-neutral { @apply text-surface-900 font-mono font-medium; }
+
+  .scrollbar-thin::-webkit-scrollbar       { width: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { @apply bg-transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-surface-300 rounded-full; }
+}
+
+/* PrimeVue overrides */
+.p-button-primary {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.p-inputtext:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgb(34 197 94 / 0.15) !important;
+}
