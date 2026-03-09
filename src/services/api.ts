@@ -1,20 +1,22 @@
 import axios, { type AxiosError } from 'axios'
 
+const BASE = import.meta.env.VITE_API_URL ?? ''
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${BASE}/api`,
   headers: { 'Content-Type': 'application/json' }
 })
 
-// Instância separada para endpoints fora do prefixo /api (ex: /auth/me, /auth/refresh)
+// Instância separada para endpoints fora do prefixo /api (ex: /auth/refresh, /auth/logout)
 export const authApi = axios.create({
-  baseURL: '/auth',
+  baseURL: `${BASE}/auth`,
   headers: { 'Content-Type': 'application/json' }
 })
 
-// Injeta token também no authApi
+// Injeta token no authApi
 authApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')
-  if (token) config.headers.Authorization = '\`Bearer \${token}\`'
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
@@ -57,14 +59,13 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token')
 
       if (!refreshToken) {
-        // Sem refresh token — força logout
         localStorage.clear()
         window.location.href = '/login'
         return Promise.reject(error)
       }
 
       try {
-        const { data } = await axios.post('/auth/refresh', { refreshToken })
+        const { data } = await axios.post(`${BASE}/auth/refresh`, { refreshToken })
         localStorage.setItem('access_token', data.accessToken)
         localStorage.setItem('refresh_token', data.refreshToken)
         processQueue(null, data.accessToken)
