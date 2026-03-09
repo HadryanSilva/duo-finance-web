@@ -20,7 +20,15 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true
       },
-      '/auth': {
+      '/auth/refresh': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      '/auth/logout': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      '/auth/me': {
         target: 'http://localhost:8080',
         changeOrigin: true
       },

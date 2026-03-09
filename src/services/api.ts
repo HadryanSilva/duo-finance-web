@@ -5,6 +5,19 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
+// Instância separada para endpoints fora do prefixo /api (ex: /auth/me, /auth/refresh)
+export const authApi = axios.create({
+  baseURL: '/auth',
+  headers: { 'Content-Type': 'application/json' }
+})
+
+// Injeta token também no authApi
+authApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token')
+  if (token) config.headers.Authorization = '\`Bearer \${token}\`'
+  return config
+})
+
 // ── Request: injeta o access token ───────────────────────────────────────────
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')

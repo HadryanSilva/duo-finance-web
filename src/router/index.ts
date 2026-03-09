@@ -4,88 +4,83 @@ import { useAuthStore } from '@/stores/auth'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // ── Auth ──────────────────────────────────────────────────────────────────
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/pages/LoginForm.vue'),
-      meta: { public: true }
+      component: () => import('@/pages/LoginForm.vue')
     },
     {
       path: '/auth/callback',
       name: 'auth-callback',
-      component: () => import('@/pages/CallbackView.vue'),
-      meta: { public: true }
+      component: () => import('@/pages/CallbackView.vue')
     },
-
-    // ── App (requer autenticação) ─────────────────────────────────────────────
-    {
-      path: '/',
-      component: () => import('@/pages/AppLayout.vue'),
-      meta: { requiresAuth: true },
-      children: [
-        {
-          path: '',
-          redirect: '/dashboard'
-        },
-        {
-          path: 'dashboard',
-          name: 'dashboard',
-          component: () => import('@/pages/DashboardView.vue'),
-          meta: { requiresCouple: true }
-        },
-        {
-          path: 'transactions',
-          name: 'transactions',
-          component: () => import('@/pages/TransactionView.vue'),
-          meta: { requiresCouple: true }
-        },
-        {
-          path: 'couple',
-          name: 'couple',
-          component: () => import('@/pages/CoupleView.vue')
-        }
-      ]
-    },
-
-    // ── Invite público ────────────────────────────────────────────────────────
     {
       path: '/invite/:token',
       name: 'invite',
-      component: () => import('@/pages/CoupleView.vue'),
-      meta: { public: true }
+      component: () => import('@/pages/CoupleView.vue')
     },
-
-    // ── 404 ───────────────────────────────────────────────────────────────────
     {
-      path: '/:pathMatch(.*)*',
-      redirect: '/'
-    }
+      path: '/',
+      component: () => import('@/pages/AppLayout.vue'),
+      children: [
+        { path: '', redirect: { name: 'dashboard' } },
+        { path: 'dashboard',    name: 'dashboard',    component: () => import('@/pages/DashboardView.vue') },
+        { path: 'transactions', name: 'transactions', component: () => import('@/pages/TransactionView.vue') },
+        { path: 'couple',       name: 'couple',       component: () => import('@/pages/CoupleView.vue') }
+      ]
+    },
+    { path: '/:pathMatch(.*)*', redirect: { name: 'login' } }
   ]
 })
 
-// ── Guard global ──────────────────────────────────────────────────────────────
+const PUBLIC_ROUTES  = new Set(['login', 'auth-callback', 'invite'])
+const REQUIRES_COUPLE = new Set(['dashboard', 'transactions'])
+
+let sessionRestored = false
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
+  const routeName = to.name as string | undefined
 
-  if (!auth.isAuthenticated && localStorage.getItem('access_token')) {
-    await auth.restoreSession()
+  console.log('[GUARD]', {
+    to: to.fullPath,
+    name: routeName,
+    isAuthenticated: auth.isAuthenticated,
+    hasCouple: auth.hasCouple,
+    hasToken: !!localStorage.getItem('access_token'),
+    sessionRestored
+  })
+
+  if (!sessionRestored) {
+    sessionRestored = true
+    if (localStorage.getItem('access_token')) {
+      console.log('[GUARD] restoring session...')
+      await auth.restoreSession()
+      console.log('[GUARD] session restored:', { isAuthenticated: auth.isAuthenticated, hasCouple: auth.hasCouple })
+    }
   }
 
-  if (to.meta.public) return true
+  if (routeName && PUBLIC_ROUTES.has(routeName)) {
+    if (routeName === 'login' && auth.isAuthenticated) {
+      const dest = auth.hasCouple ? 'dashboard' : 'couple'
+      console.log('[GUARD] authenticated on login → redirect to', dest)
+      return { name: dest }
+    }
+    console.log('[GUARD] public route → allow')
+    return true
+  }
 
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+  if (!auth.isAuthenticated) {
+    console.log('[GUARD] not authenticated → login')
     return { name: 'login' }
   }
 
-  if (to.meta.requiresCouple && !auth.hasCouple) {
+  if (REQUIRES_COUPLE.has(routeName ?? '') && !auth.hasCouple) {
+    console.log('[GUARD] no couple → couple')
     return { name: 'couple' }
   }
 
-  if (to.name === 'login' && auth.isAuthenticated) {
-    return { name: 'dashboard' }
-  }
-
+  console.log('[GUARD] allow')
   return true
 })
 
