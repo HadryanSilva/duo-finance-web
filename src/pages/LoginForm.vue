@@ -255,6 +255,7 @@ async function submitLocal() {
 
 function loginWithGoogle() {
   loading.value = true
-  window.location.href = '/oauth2/authorization/google'
+  const apiUrl = import.meta.env.VITE_API_URL ?? ''
+  window.location.href = apiUrl + '/oauth2/authorization/google'
 }
 </script>
