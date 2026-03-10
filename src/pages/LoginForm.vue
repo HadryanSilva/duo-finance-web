@@ -127,8 +127,18 @@
             />
           </div>
 
+          <!-- ── Senha com link "Esqueci minha senha" — RF26 ── -->
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1.5">Senha</label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-sm font-medium text-surface-700">Senha</label>
+              <RouterLink
+                v-if="mode === 'login'"
+                to="/forgot-password"
+                class="text-xs text-surface-400 hover:text-surface-700 transition-colors"
+              >
+                Esqueci minha senha
+              </RouterLink>
+            </div>
             <div class="relative">
               <input
                 v-model="password"
@@ -195,12 +205,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services'
 
-const router = useRouter()
-const route  = useRoute()
+const router    = useRouter()
+const route     = useRoute()
 const authStore = useAuthStore()
 
 type Mode = 'login' | 'register'
@@ -221,8 +231,8 @@ const email     = ref('')
 const password  = ref('')
 
 function switchMode(m: Mode) {
-  mode.value  = m
-  error.value = ''
+  mode.value     = m
+  error.value    = ''
   password.value = ''
 }
 
@@ -242,7 +252,6 @@ async function submitLocal() {
     await router.push(redirect || '/dashboard')
   } catch (e: unknown) {
     if (e instanceof Error) {
-      // Trata mensagens de erro do backend
       const msg = (e as { response?: { data?: { message?: string } } }).response?.data?.message
       error.value = msg ?? e.message
     } else {

@@ -20,6 +20,16 @@ const router = createRouter({
       name: 'invite',
       component: () => import('@/pages/CoupleView.vue')
     },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('@/pages/ForgotPasswordView.vue')
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('@/pages/ResetPasswordView.vue')
+    },
 
     // ── Rotas protegidas ──────────────────────────────────────────────────────
     {
@@ -57,7 +67,9 @@ const router = createRouter({
 })
 
 // ── Rotas que não precisam de autenticação ────────────────────────────────────
-const PUBLIC_ROUTES = new Set(['login', 'auth-callback', 'invite'])
+const PUBLIC_ROUTES = new Set([
+  'login', 'auth-callback', 'invite', 'forgot-password', 'reset-password'
+])
 
 // ── Rotas que precisam de casal vinculado ─────────────────────────────────────
 const REQUIRES_COUPLE = new Set(['dashboard', 'transactions'])

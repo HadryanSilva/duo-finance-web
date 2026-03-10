@@ -34,6 +34,10 @@ export const authService = {
     api.post<TokenResponse>('/auth/register', { firstName, lastName, email, password }).then(r => r.data),
   login: (email: string, password: string) =>
     api.post<TokenResponse>('/auth/login', { email, password }).then(r => r.data),
+  forgotPassword: (email: string) =>
+    api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, newPassword: string) =>
+    api.post('/auth/reset-password', { token, newPassword }),
 }
 
 // ── Couple ────────────────────────────────────────────────────────────────────
