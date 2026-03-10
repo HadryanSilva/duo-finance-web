@@ -43,6 +43,7 @@ export interface TransactionFilters {
   category?: string
   type?: TransactionType
   userId?: string
+  description?: string       // RF27 — busca textual por descrição
   startDate?: string
   endDate?: string
   page?: number
@@ -94,5 +95,5 @@ export const reportService = {
   monthlyComparison: () =>
     api.get<MonthlyComparisonResponse>('/reports/monthly-comparison').then(r => r.data),
   exportCsv: (period: ReportPeriod = {}) =>
-    api.get('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data)
+    api.get<Blob>('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data)
 }
