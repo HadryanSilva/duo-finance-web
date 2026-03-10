@@ -29,13 +29,47 @@
         />
       </div>
 
-      <!-- Linha 2: mês -->
-      <select
-        v-model="selectedMonth"
-        class="w-full sm:w-auto text-sm border border-surface-200 rounded-xl px-3 py-2 bg-white text-surface-700 focus:outline-none focus:border-surface-400"
-      >
-        <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
-      </select>
+      <!-- Linha 2: busca + mês -->
+      <div class="flex flex-col sm:flex-row gap-2">
+
+        <!-- Campo de busca — RF27 -->
+        <div class="relative flex-1">
+          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm pointer-events-none" />
+          <input
+            v-model="searchInput"
+            type="text"
+            placeholder="Buscar por descrição..."
+            class="w-full pl-9 pr-8 py-2 text-sm border border-surface-200 rounded-xl bg-white text-surface-700 placeholder-surface-400 focus:outline-none focus:border-surface-400 transition-colors"
+          />
+          <button
+            v-if="searchInput"
+            @click="searchInput = ''"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-surface-400 hover:text-surface-600 hover:bg-surface-100 transition-colors"
+          >
+            <i class="pi pi-times text-[10px]" />
+          </button>
+        </div>
+
+        <!-- Seletor de mês -->
+        <select
+          v-model="selectedMonth"
+          class="w-full sm:w-auto text-sm border border-surface-200 rounded-xl px-3 py-2 bg-white text-surface-700 focus:outline-none focus:border-surface-400"
+        >
+          <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+        </select>
+      </div>
+
+      <!-- Badge: resultado da busca -->
+      <p v-if="debouncedSearch && !loading" class="text-xs text-surface-400">
+        <template v-if="page.totalElements > 0">
+          {{ page.totalElements }} resultado{{ page.totalElements !== 1 ? 's' : '' }} para
+          <span class="font-medium text-surface-700">"{{ debouncedSearch }}"</span>
+        </template>
+        <template v-else>
+          Nenhum resultado para
+          <span class="font-medium text-surface-700">"{{ debouncedSearch }}"</span>
+        </template>
+      </p>
     </div>
 
     <!-- Table -->
@@ -58,7 +92,9 @@
       <!-- Vazio -->
       <div v-else-if="page.content.length === 0" class="py-20 text-center">
         <i class="pi pi-inbox text-surface-200 text-4xl mb-3 block" />
-        <p class="text-surface-400">Nenhuma transação encontrada.</p>
+        <p class="text-surface-400">
+          {{ debouncedSearch ? 'Nenhuma transação encontrada para essa busca.' : 'Nenhuma transação encontrada.' }}
+        </p>
       </div>
 
       <!-- Linhas -->
@@ -78,13 +114,13 @@
 
           <!-- Info -->
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-surface-800 truncate">
-              {{ tx.description || tx.categoryLabel }}
-            </p>
+            <p
+              class="text-sm font-medium text-surface-800 truncate"
+              v-html="highlightMatch(tx.description || tx.categoryLabel)"
+            />
             <div class="flex items-center gap-1.5 mt-0.5">
               <span class="text-xs text-surface-400">{{ formatDate(tx.date) }}</span>
               <span class="text-surface-200 text-xs">·</span>
-              <!-- Avatar + nome do autor (compacto em mobile) -->
               <span class="flex items-center gap-1">
                 <img
                   v-if="tx.createdBy.avatarUrl"
@@ -106,7 +142,7 @@
           </div>
 
           <!-- Valor + ações -->
-          <div class="flex items-center gap-1 shrink-0">
+          <div class="flex items-center gap-0.5 shrink-0">
             <span
               class="font-mono text-sm font-medium"
               :class="tx.type === 'INCOME' ? 'text-green-600' : 'text-red-500'"
@@ -114,8 +150,8 @@
               {{ tx.type === 'INCOME' ? '+' : '−' }} {{ formatCurrency(tx.amount) }}
             </span>
 
-            <!-- Ações (hover em desktop, sempre visível em mobile via tap) -->
-            <div class="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity lg:flex hidden">
+            <!-- Ações desktop (hover) -->
+            <div class="hidden lg:flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 @click="openEdit(tx)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors"
@@ -130,7 +166,7 @@
               </button>
             </div>
 
-            <!-- Menu mobile (3 pontos) -->
+            <!-- Menu mobile -->
             <button
               class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-surface-300"
               @click="openMobileMenu(tx)"
@@ -168,7 +204,7 @@
       </div>
     </div>
 
-    <!-- Dialog: criar / editar transação -->
+    <!-- Dialog: criar / editar -->
     <Dialog
       v-model:visible="showDialog"
       :header="editingTx ? 'Editar transação' : 'Nova transação'"
@@ -185,7 +221,7 @@
       />
     </Dialog>
 
-    <!-- Bottom sheet mobile: ações de transação -->
+    <!-- Bottom sheet mobile -->
     <Dialog
       v-model:visible="showMobileMenu"
       :modal="true"
@@ -218,7 +254,6 @@
       </div>
     </Dialog>
 
-    <!-- Confirm delete -->
     <ConfirmDialog />
   </div>
 </template>
@@ -262,6 +297,22 @@ const monthOptions = computed(() => {
 
 const filters = reactive<{ type?: TransactionType }>({ type: undefined })
 
+// ── Busca textual com debounce — RF27 ─────────────────────────────────────────
+
+const searchInput     = ref('')
+const debouncedSearch = ref('')
+let   searchTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(searchInput, (val) => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    debouncedSearch.value = val.trim()
+    currentPage.value = 0
+  }, 400)
+})
+
+// ── Período ───────────────────────────────────────────────────────────────────
+
 const dateRange = computed(() => {
   const [year = 0, month = 1] = selectedMonth.value.split('-').map(Number)
   const start = new Date(year, month - 1, 1)
@@ -285,23 +336,18 @@ async function loadTransactions() {
   try {
     page.value = await transactionService.list({
       ...dateRange.value,
-      type: filters.type,
-      page: currentPage.value,
-      size: 15
+      type:        filters.type,
+      description: debouncedSearch.value || undefined,
+      page:        currentPage.value,
+      size:        15
     })
-  } catch {
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as transações.', life: 4000 })
   } finally {
     loading.value = false
   }
 }
 
 async function loadCategories() {
-  try {
-    categories.value = await categoryService.list()
-  } catch {
-    toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar as categorias.', life: 4000 })
-  }
+  categories.value = await categoryService.list()
 }
 
 function goPage(n: number) {
@@ -309,8 +355,8 @@ function goPage(n: number) {
 }
 
 onMounted(() => { loadTransactions(); loadCategories() })
-watch([selectedMonth, filters], () => { currentPage.value = 0 })
-watch([selectedMonth, filters, currentPage], loadTransactions)
+watch([selectedMonth, currentPage, debouncedSearch], loadTransactions)
+watch(filters, loadTransactions, { deep: true })
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
 
@@ -350,13 +396,9 @@ function confirmDelete(tx: TransactionResponse) {
     acceptLabel: 'Remover',
     acceptClass: 'p-button-danger',
     accept: async () => {
-      try {
-        await transactionService.delete(tx.id)
-        toast.add({ severity: 'success', summary: 'Removido', detail: 'Transação removida.', life: 3000 })
-        await loadTransactions()
-      } catch {
-        toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível remover a transação.', life: 4000 })
-      }
+      await transactionService.delete(tx.id)
+      toast.add({ severity: 'success', summary: 'Removido', detail: 'Transação removida.', life: 3000 })
+      await loadTransactions()
     }
   })
 }
@@ -367,11 +409,34 @@ const showMobileMenu = ref(false)
 const mobileMenuTx   = ref<TransactionResponse | null>(null)
 
 function openMobileMenu(tx: TransactionResponse) {
-  mobileMenuTx.value  = tx
+  mobileMenuTx.value   = tx
   showMobileMenu.value = true
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Envolve o termo buscado em <mark> para highlight visual */
+function highlightMatch(text: string): string {
+  const term = debouncedSearch.value
+  if (!term) return escapeHtml(text)
+  const escaped = escapeRegex(term)
+  return escapeHtml(text).replace(
+    new RegExp(`(${escaped})`, 'gi'),
+    '<mark class="bg-amber-100 text-amber-800 rounded px-0.5">$1</mark>'
+  )
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
