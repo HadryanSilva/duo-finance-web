@@ -100,28 +100,49 @@
 
         <!-- Usuário -->
         <div class="px-3 pb-4">
-          <button
-            @click="handleLogout"
-            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-surface-600 hover:bg-surface-50 hover:text-surface-900 transition-all duration-150 group"
-          >
-            <img
-              v-if="auth.user?.avatarUrl"
-              :src="auth.user.avatarUrl"
-              :alt="auth.fullName"
-              class="w-7 h-7 rounded-full object-cover"
-            />
-            <div v-else class="w-7 h-7 rounded-full bg-surface-200 flex items-center justify-center">
-              <span class="text-surface-600 text-xs font-medium">{{ auth.user?.firstName?.[0] }}</span>
-            </div>
-            <div class="flex-1 text-left min-w-0">
+          <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl">
+
+            <!-- Avatar — abre modal de perfil -->
+            <button
+              @click="showProfile = true"
+              class="relative shrink-0 group"
+              title="Editar perfil"
+            >
+              <img
+                v-if="auth.user?.avatarUrl"
+                :src="auth.user.avatarUrl"
+                :alt="auth.fullName"
+                class="w-7 h-7 rounded-full object-cover ring-2 ring-transparent group-hover:ring-surface-300 transition-all"
+              />
+              <div v-else class="w-7 h-7 rounded-full bg-surface-200 flex items-center justify-center ring-2 ring-transparent group-hover:ring-surface-300 transition-all">
+                <span class="text-surface-600 text-xs font-medium">{{ auth.user?.firstName?.[0] }}</span>
+              </div>
+              <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-white border border-surface-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <i class="pi pi-pencil text-surface-500" style="font-size: 7px" />
+              </span>
+            </button>
+
+            <!-- Nome + email -->
+            <div class="flex-1 min-w-0">
               <p class="font-medium text-surface-800 text-xs truncate">{{ auth.fullName }}</p>
               <p class="text-surface-400 text-xs truncate">{{ auth.user?.email }}</p>
             </div>
-            <i class="pi pi-sign-out text-surface-400 group-hover:text-surface-600 text-xs shrink-0" />
-          </button>
+
+            <!-- Logout -->
+            <button
+              @click="handleLogout"
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors shrink-0"
+              title="Sair"
+            >
+              <i class="pi pi-sign-out text-xs" />
+            </button>
+          </div>
         </div>
       </aside>
     </Transition>
+
+    <!-- Modal de perfil -->
+    <ProfileModal v-model="showProfile" />
 
     <!-- ── MAIN ──────────────────────────────────────────────────────── -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -184,11 +205,16 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
+import ProfileModal from './ProfileModal.vue'
 
 const auth        = useAuthStore()
 const coupleStore = useCoupleStore()
 const route       = useRoute()
 const router      = useRouter()
+
+// ── Profile modal ─────────────────────────────────────────────────────────────
+
+const showProfile = ref(false)
 
 // ── Responsive state ──────────────────────────────────────────────────────────
 
