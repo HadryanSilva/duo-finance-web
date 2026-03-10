@@ -7,6 +7,20 @@ import type {
   TransactionType
 } from '@/types'
 
+// ── User ──────────────────────────────────────────────────────────────────────
+
+export const userService = {
+  updateProfile: (firstName: string, lastName: string) =>
+    api.patch<UserInfo>('/users/me', { firstName, lastName }).then(r => r.data),
+  uploadAvatar: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post<{ avatarUrl: string }>('/users/me/avatar', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(r => r.data)
+  }
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export const authService = {
