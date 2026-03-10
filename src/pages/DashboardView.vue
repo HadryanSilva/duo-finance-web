@@ -22,12 +22,6 @@
       </div>
     </div>
 
-    <!-- Error banner -->
-    <div v-if="error" class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm">
-      <i class="pi pi-exclamation-circle shrink-0" />
-      {{ error }}
-    </div>
-
     <!-- Summary cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
       <SummaryCard
@@ -76,10 +70,12 @@
           </div>
         </div>
 
-        <div v-if="loadingMonthly" class="h-48 lg:h-52 flex items-center justify-center">
-          <i class="pi pi-spin pi-spinner text-surface-300 text-2xl" />
+        <div class="relative h-48 lg:h-52 w-full">
+          <div v-if="loadingMonthly" class="absolute inset-0 flex items-center justify-center">
+            <i class="pi pi-spin pi-spinner text-surface-300 text-2xl" />
+          </div>
+          <Bar v-else-if="monthlyChartData" :data="monthlyChartData" :options="barOptions" />
         </div>
-        <Bar v-else-if="monthlyChartData" :data="monthlyChartData" :options="barOptions" class="h-48 lg:h-52" />
       </div>
 
       <!-- Por categoria -->
@@ -200,7 +196,7 @@ import {
 import type { TooltipItem } from 'chart.js'
 import { reportService, transactionService } from '@/services'
 import type { SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse, TransactionResponse, TransactionCategory } from '@/types'
-import SummaryCard from '@/components/SummaryCard.vue'
+import SummaryCard from '../components/SummaryCard.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
 
@@ -257,51 +253,36 @@ const loadingSummary      = ref(false)
 const loadingCategory     = ref(false)
 const loadingMonthly      = ref(false)
 const loadingTransactions = ref(false)
-const error               = ref<string | null>(null)
 
-async function loadPeriodData() {
+async function loadAll() {
   const period = dateRange.value
 
-  loadingSummary.value      = true
-  loadingCategory.value     = true
+  loadingSummary.value   = true
+  loadingCategory.value  = true
+  loadingMonthly.value   = true
   loadingTransactions.value = true
-  error.value               = null
 
-  try {
-    await Promise.all([
-      reportService.summary(period)
-        .then(d => summary.value = d)
-        .finally(() => loadingSummary.value = false),
+  await Promise.all([
+    reportService.summary(period)
+      .then(d => summary.value = d)
+      .finally(() => loadingSummary.value = false),
 
-      reportService.byCategory(period, 'EXPENSE')
-        .then(d => categoryData.value = d)
-        .finally(() => loadingCategory.value = false),
+    reportService.byCategory(period, 'EXPENSE')
+      .then(d => categoryData.value = d)
+      .finally(() => loadingCategory.value = false),
 
-      transactionService.list({ ...period, size: 8 })
-        .then(d => recentTransactions.value = d.content)
-        .finally(() => loadingTransactions.value = false)
-    ])
-  } catch {
-    error.value = 'Erro ao carregar os dados. Tente novamente.'
-  }
+    reportService.monthlyComparison()
+      .then(d => monthlyData.value = d)
+      .finally(() => loadingMonthly.value = false),
+
+    transactionService.list({ ...period, size: 8 })
+      .then(d => recentTransactions.value = d.content)
+      .finally(() => loadingTransactions.value = false)
+  ])
 }
 
-async function loadMonthlyComparison() {
-  loadingMonthly.value = true
-  try {
-    monthlyData.value = await reportService.monthlyComparison()
-  } catch {
-    error.value = 'Erro ao carregar comparativo mensal.'
-  } finally {
-    loadingMonthly.value = false
-  }
-}
-
-onMounted(() => {
-  loadPeriodData()
-  loadMonthlyComparison()
-})
-watch(activePeriod, loadPeriodData)
+onMounted(loadAll)
+watch(activePeriod, loadAll)
 
 // ── Charts ────────────────────────────────────────────────────────────────────
 
