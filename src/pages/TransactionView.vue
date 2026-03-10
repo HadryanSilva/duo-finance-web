@@ -6,16 +6,35 @@
 
       <!-- Linha 1: filtros de tipo + botão nova -->
       <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 flex-wrap">
           <button
             v-for="opt in typeFilter"
             :key="String(opt.value)"
-            @click="filters.type = filters.type === opt.value ? undefined : opt.value"
+            @click="filters.type = filters.type === opt.value ? undefined : opt.value; currentPage = 0"
             class="px-3 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-medium transition-all duration-150 border"
             :class="filters.type === opt.value
               ? opt.activeClass
               : 'bg-white border-surface-200 text-surface-600 hover:border-surface-300'"
           >
+            {{ opt.label }}
+          </button>
+
+          <!-- Separador — só aparece com parceiro vinculado -->
+          <span v-if="partnerFilter.length" class="w-px h-5 bg-surface-200 mx-1" />
+
+          <!-- Filtro por parceiro — RF28 -->
+          <button
+            v-for="opt in partnerFilter"
+            :key="String(opt.value)"
+            @click="filters.userId = filters.userId === opt.value ? undefined : opt.value; currentPage = 0"
+            class="px-3 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-medium transition-all duration-150 border flex items-center gap-1.5"
+            :class="filters.userId === opt.value
+              ? 'bg-surface-900 text-white border-surface-900'
+              : 'bg-white border-surface-200 text-surface-600 hover:border-surface-300'"
+          >
+            <i v-if="opt.value === undefined" class="pi pi-users text-[11px]" />
+            <i v-else-if="opt.value === auth.user?.id" class="pi pi-user text-[11px]" />
+            <i v-else class="pi pi-heart text-[11px]" />
             {{ opt.label }}
           </button>
         </div>
@@ -266,12 +285,16 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { transactionService, categoryService } from '@/services'
-import type { CreateTransactionPayload } from '@/services'
 import type { TransactionResponse, CategoryResponse, TransactionType, TransactionCategory, Page } from '@/types'
+import type { CreateTransactionPayload } from '@/services'
 import TransactionForm from './TransactionForm.vue'
+import { useAuthStore } from '@/stores/auth'
+import { useCoupleStore } from '@/stores/couple'
 
-const confirm = useConfirm()
-const toast   = useToast()
+const confirm     = useConfirm()
+const toast       = useToast()
+const auth        = useAuthStore()
+const coupleStore = useCoupleStore()
 
 // ── Filtros ───────────────────────────────────────────────────────────────────
 
@@ -295,7 +318,24 @@ const monthOptions = computed(() => {
   return opts
 })
 
-const filters = reactive<{ type?: TransactionType }>({ type: undefined })
+const filters = reactive<{ type?: TransactionType; userId?: string }>({ type: undefined, userId: undefined })
+
+// ── Filtro por parceiro — RF28 ────────────────────────────────────────────────
+
+// Constrói as opções de parceiro dinamicamente a partir dos membros do casal.
+// Só aparece se o casal tiver 2 membros (caso contrário não há com quem filtrar).
+const partnerFilter = computed(() => {
+  const members = coupleStore.couple?.members ?? []
+  if (members.length < 2) return []
+
+  return [
+    { label: 'Todos', value: undefined },
+    ...members.map(m => ({
+      label: m.id === auth.user?.id ? 'Meus' : m.firstName,
+      value: m.id
+    }))
+  ]
+})
 
 // ── Busca textual com debounce — RF27 ─────────────────────────────────────────
 
@@ -337,6 +377,7 @@ async function loadTransactions() {
     page.value = await transactionService.list({
       ...dateRange.value,
       type:        filters.type,
+      userId:      filters.userId,
       description: debouncedSearch.value || undefined,
       page:        currentPage.value,
       size:        15
@@ -355,8 +396,7 @@ function goPage(n: number) {
 }
 
 onMounted(() => { loadTransactions(); loadCategories() })
-watch([selectedMonth, currentPage, debouncedSearch], loadTransactions)
-watch(filters, loadTransactions, { deep: true })
+watch([selectedMonth, filters, currentPage, debouncedSearch], loadTransactions)
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
 
@@ -380,7 +420,7 @@ async function handleSubmit(payload: CreateTransactionPayload) {
     showDialog.value = false
     await loadTransactions()
   } catch (e: unknown) {
-    const detail = (e as import('axios').AxiosError<{ detail?: string }>)?.response?.data?.detail ?? 'Tente novamente.'
+    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'Tente novamente.'
     toast.add({ severity: 'error', summary: 'Erro', detail, life: 4000 })
   } finally {
     submitting.value = false
