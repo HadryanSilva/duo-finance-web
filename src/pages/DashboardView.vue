@@ -1,8 +1,8 @@
 <template>
-  <div class="p-8 space-y-8">
+  <div class="p-4 lg:p-8 space-y-6 lg:space-y-8">
 
     <!-- Header row: período -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div>
         <p class="text-surface-400 text-sm">Período</p>
         <p class="font-display text-surface-900 font-semibold text-lg">{{ periodLabel }}</p>
@@ -12,7 +12,7 @@
           v-for="opt in periodOptions"
           :key="opt.value"
           @click="selectPeriod(opt.value)"
-          class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+          class="flex-1 sm:flex-none px-3 lg:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150"
           :class="activePeriod === opt.value
             ? 'bg-surface-900 text-white'
             : 'bg-white border border-surface-200 text-surface-600 hover:border-surface-300'"
@@ -23,7 +23,7 @@
     </div>
 
     <!-- Summary cards -->
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
       <SummaryCard
         label="Receitas"
         :value="summary?.totalIncome ?? 0"
@@ -49,16 +49,16 @@
     </div>
 
     <!-- Charts row -->
-    <div class="grid grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
-      <!-- Comparativo mensal (3/5) -->
-      <div class="col-span-3 card">
+      <!-- Comparativo mensal -->
+      <div class="lg:col-span-3 card">
         <div class="flex items-center justify-between mb-6">
           <div>
             <h3 class="font-display font-semibold text-surface-900">Comparativo mensal</h3>
             <p class="text-surface-400 text-xs mt-0.5">Últimos 6 meses</p>
           </div>
-          <div class="flex items-center gap-4 text-xs text-surface-500">
+          <div class="flex items-center gap-3 lg:gap-4 text-xs text-surface-500">
             <span class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />
               Receitas
@@ -70,14 +70,16 @@
           </div>
         </div>
 
-        <div v-if="loadingMonthly" class="h-52 flex items-center justify-center">
-          <i class="pi pi-spin pi-spinner text-surface-300 text-2xl" />
+        <div class="relative h-48 lg:h-52 w-full">
+          <div v-if="loadingMonthly" class="absolute inset-0 flex items-center justify-center">
+            <i class="pi pi-spin pi-spinner text-surface-300 text-2xl" />
+          </div>
+          <Bar v-else-if="monthlyChartData" :data="monthlyChartData" :options="barOptions" />
         </div>
-        <Bar v-else-if="monthlyChartData" :data="monthlyChartData" :options="barOptions" class="h-52" />
       </div>
 
-      <!-- Por categoria (2/5) -->
-      <div class="col-span-2 card">
+      <!-- Por categoria -->
+      <div class="lg:col-span-2 card">
         <div class="flex items-center justify-between mb-6">
           <div>
             <h3 class="font-display font-semibold text-surface-900">Por categoria</h3>
@@ -85,69 +87,66 @@
           </div>
         </div>
 
-        <div v-if="loadingCategory" class="h-52 flex items-center justify-center">
+        <div v-if="loadingCategory" class="h-48 lg:h-52 flex items-center justify-center">
           <i class="pi pi-spin pi-spinner text-surface-300 text-2xl" />
         </div>
 
         <template v-else-if="categoryData && categoryData.categories.length > 0">
-          <Doughnut :data="doughnutChartData!" :options="doughnutOptions" class="h-32 mx-auto" />
-          <!-- Legenda customizada -->
+          <Doughnut :data="doughnutChartData!" :options="doughnutOptions" class="h-32 lg:h-36 mx-auto" />
           <ul class="mt-4 space-y-2">
             <li
               v-for="(cat, i) in categoryData.categories.slice(0, 4)"
               :key="cat.category"
               class="flex items-center justify-between text-xs"
             >
-              <span class="flex items-center gap-2">
+              <span class="flex items-center gap-2 text-surface-600">
                 <span
                   class="w-2 h-2 rounded-full shrink-0"
-                  :style="{ background: doughnutColors[i % doughnutColors.length] }"
+                  :style="{ backgroundColor: doughnutColors[i] }"
                 />
-                <span class="text-surface-600 truncate max-w-[110px]">{{ cat.categoryLabel }}</span>
+                {{ cat.categoryLabel }}
               </span>
-              <span class="font-mono text-surface-800 font-medium">{{ cat.percentage }}%</span>
+              <span class="font-medium text-surface-800">{{ formatCurrency(cat.amount) }}</span>
             </li>
           </ul>
         </template>
 
-        <div v-else class="h-52 flex flex-col items-center justify-center text-center">
+        <div v-else class="h-48 lg:h-52 flex flex-col items-center justify-center text-center">
           <i class="pi pi-chart-pie text-surface-200 text-3xl mb-2" />
-          <p class="text-surface-400 text-sm">Sem despesas no período</p>
+          <p class="text-surface-400 text-xs">Sem despesas no período</p>
         </div>
       </div>
     </div>
 
     <!-- Últimas transações -->
-    <div class="card">
-      <div class="flex items-center justify-between mb-5">
+    <div class="card p-0 overflow-hidden">
+      <div class="flex items-center justify-between px-4 lg:px-6 py-4 border-b border-surface-50">
         <h3 class="font-display font-semibold text-surface-900">Últimas transações</h3>
         <RouterLink
           to="/transactions"
-          class="text-xs text-surface-500 hover:text-surface-900 font-medium flex items-center gap-1 transition-colors"
+          class="text-xs text-surface-500 hover:text-surface-800 transition-colors flex items-center gap-1"
         >
-          Ver todas <i class="pi pi-arrow-right text-xs" />
+          Ver todas <i class="pi pi-arrow-right text-[10px]" />
         </RouterLink>
       </div>
 
-      <div v-if="loadingTransactions" class="space-y-3">
-        <div v-for="i in 5" :key="i" class="h-12 bg-surface-50 rounded-xl animate-pulse" />
+      <div v-if="loadingTransactions" class="divide-y divide-surface-50">
+        <div v-for="i in 5" :key="i" class="flex items-center gap-4 px-4 lg:px-6 py-4">
+          <div class="w-9 h-9 rounded-xl bg-surface-100 animate-pulse shrink-0" />
+          <div class="flex-1 space-y-2">
+            <div class="h-3.5 bg-surface-100 rounded animate-pulse w-1/3" />
+            <div class="h-3 bg-surface-50 rounded animate-pulse w-1/5" />
+          </div>
+          <div class="h-4 bg-surface-100 rounded animate-pulse w-20" />
+        </div>
       </div>
 
-      <div v-else-if="recentTransactions.length === 0" class="py-10 text-center">
-        <i class="pi pi-inbox text-surface-200 text-3xl mb-2 block" />
-        <p class="text-surface-400 text-sm">Nenhuma transação ainda.</p>
-        <RouterLink to="/transactions" class="text-sm text-primary-600 font-medium mt-1 inline-block hover:underline">
-          Adicionar primeira transação
-        </RouterLink>
-      </div>
-
-      <ul v-else class="divide-y divide-surface-50">
+      <ul v-else-if="recentTransactions.length > 0" class="divide-y divide-surface-50">
         <li
           v-for="tx in recentTransactions"
           :key="tx.id"
-          class="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
+          class="flex items-center gap-3 lg:gap-4 px-4 lg:px-6 py-3 lg:py-4 hover:bg-surface-50/60 transition-colors"
         >
-          <!-- Ícone categoria -->
           <div
             class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
             :class="tx.type === 'INCOME' ? 'bg-green-50' : 'bg-red-50'"
@@ -176,6 +175,11 @@
           </span>
         </li>
       </ul>
+
+      <div v-else class="py-16 text-center">
+        <i class="pi pi-inbox text-surface-200 text-3xl mb-2 block" />
+        <p class="text-surface-400 text-sm">Nenhuma transação no período.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -189,9 +193,10 @@ import {
   CategoryScale, LinearScale, BarElement,
   ArcElement, Tooltip, Legend
 } from 'chart.js'
+import type { TooltipItem } from 'chart.js'
 import { reportService, transactionService } from '@/services'
 import type { SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse, TransactionResponse, TransactionCategory } from '@/types'
-import SummaryCard from './SummaryCard.vue'
+import SummaryCard from '../components/SummaryCard.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
 
@@ -327,7 +332,7 @@ const barOptions = {
   plugins: { legend: { display: false }, tooltip: { mode: 'index' as const } },
   scales: {
     x: { grid: { display: false }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 } } },
-    y: { grid: { color: '#f1f0ee' }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 }, callback: (v: any) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) } }
+    y: { grid: { color: '#f1f0ee' }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 }, callback: (v: number | string) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) } }
   }
 }
 
@@ -335,7 +340,7 @@ const doughnutOptions = {
   responsive: true,
   maintainAspectRatio: false,
   cutout: '70%',
-  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: any) => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } } }
+  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: TooltipItem<'doughnut'>) => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } } }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

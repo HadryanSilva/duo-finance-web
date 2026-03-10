@@ -7,6 +7,20 @@ import type {
   TransactionType
 } from '@/types'
 
+// ── User ──────────────────────────────────────────────────────────────────────
+
+export const userService = {
+  updateProfile: (firstName: string, lastName: string) =>
+    api.patch<UserInfo>('/users/me', { firstName, lastName }).then(r => r.data),
+  uploadAvatar: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post<{ avatarUrl: string }>('/users/me/avatar', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(r => r.data)
+  }
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export const authService = {
@@ -43,6 +57,7 @@ export interface TransactionFilters {
   category?: string
   type?: TransactionType
   userId?: string
+  description?: string       // RF27 — busca textual por descrição
   startDate?: string
   endDate?: string
   page?: number
@@ -94,5 +109,5 @@ export const reportService = {
   monthlyComparison: () =>
     api.get<MonthlyComparisonResponse>('/reports/monthly-comparison').then(r => r.data),
   exportCsv: (period: ReportPeriod = {}) =>
-    api.get('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data)
+    api.get<Blob>('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data)
 }

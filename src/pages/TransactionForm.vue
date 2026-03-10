@@ -129,6 +129,7 @@ import DatePicker from 'primevue/datepicker'
 import Button from 'primevue/button'
 import ToggleSwitch from 'primevue/toggleswitch'
 import type { TransactionResponse, CategoryResponse } from '@/types'
+import type { CreateTransactionPayload } from '@/services'
 
 const props = defineProps<{
   transaction?: TransactionResponse
@@ -137,7 +138,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  submit: [payload: any]
+  submit: [payload: CreateTransactionPayload]
   cancel: []
 }>()
 
@@ -173,9 +174,9 @@ function submit() {
   if (!isValid.value) return
   emit('submit', {
     category:          form.category,
-    amount:            form.amount,
+    amount:            form.amount!,
     description:       form.description || undefined,
-    date:              toYMD(form.dateObj),
+    date:              toYMD(form.dateObj)!,
     recurring:         form.recurring,
     recurrenceRule:    form.recurring ? form.recurrenceRule : undefined,
     recurrenceEndDate: form.recurring ? toYMD(form.recurrenceEndDateObj) : undefined

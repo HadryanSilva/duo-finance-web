@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { AxiosError } from 'axios'
 import { reportService } from '@/services'
+
+function apiMessage(e: unknown, fallback: string): string {
+  return (e as AxiosError<{ detail?: string }>)?.response?.data?.detail ?? fallback
+}
 import type {
   SummaryResponse,
   ByCategoryResponse,
@@ -30,8 +35,8 @@ export const useReportStore = defineStore('report', () => {
     error.value = null
     try {
       summary.value = await reportService.summary(period)
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao carregar resumo'
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao carregar resumo')
     } finally {
       loadingSummary.value = false
     }
@@ -42,8 +47,8 @@ export const useReportStore = defineStore('report', () => {
     error.value = null
     try {
       byCategory.value = await reportService.byCategory(period, type)
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao carregar categorias'
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao carregar categorias')
     } finally {
       loadingByCategory.value = false
     }
@@ -54,8 +59,8 @@ export const useReportStore = defineStore('report', () => {
     error.value = null
     try {
       monthly.value = await reportService.monthlyComparison()
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao carregar comparativo mensal'
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao carregar comparativo mensal')
     } finally {
       loadingMonthly.value = false
     }
@@ -65,8 +70,7 @@ export const useReportStore = defineStore('report', () => {
   async function fetchDashboard(period: ReportPeriod = {}, categoryType: TransactionType = 'EXPENSE') {
     await Promise.all([
       fetchSummary(period),
-      fetchByCategory(period, categoryType),
-      fetchMonthly()
+      fetchByCategory(period, categoryType)
     ])
   }
 
@@ -81,10 +85,12 @@ export const useReportStore = defineStore('report', () => {
       const end   = period.endDate   ?? 'hoje'
       a.href     = url
       a.download = `duofinance_${start}_${end}.csv`
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } catch (e: any) {
-      error.value = e?.response?.data?.detail ?? 'Erro ao exportar CSV'
+    } catch (e: unknown) {
+      error.value = apiMessage(e, 'Erro ao exportar CSV')
       throw e
     } finally {
       exporting.value = false
