@@ -185,7 +185,7 @@
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
-        class="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors"
+        class="relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors"
         :class="isActive(item.to) ? 'text-surface-900' : 'text-surface-400'"
       >
         <i :class="[item.icon, 'text-lg']" />
