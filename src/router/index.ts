@@ -18,7 +18,7 @@ const router = createRouter({
     {
       path: '/invite/:token',
       name: 'invite',
-      component: () => import('@/pages/CoupleView.vue')
+      component: () => import('@/pages/InviteView.vue')
     },
     {
       path: '/forgot-password',
@@ -79,7 +79,6 @@ let sessionRestored = false
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
-  // Restaura sessão apenas uma vez por carregamento da app
   if (!sessionRestored) {
     sessionRestored = true
     if (localStorage.getItem('access_token')) {
@@ -89,9 +88,7 @@ router.beforeEach(async (to) => {
 
   const routeName = to.name as string | undefined
 
-  // Rotas públicas — sempre passam
   if (routeName && PUBLIC_ROUTES.has(routeName)) {
-    // Evita que usuário autenticado volte ao login
     if (routeName === 'login' && auth.isAuthenticated) {
       const redirect = to.query.redirect as string | undefined
       if (redirect) return redirect
@@ -100,12 +97,10 @@ router.beforeEach(async (to) => {
     return true
   }
 
-  // Qualquer rota protegida sem autenticação → login (salva destino para voltar depois)
   if (!auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  // Rotas que exigem casal → couple
   if (REQUIRES_COUPLE.has(routeName ?? '') && !auth.hasCouple) {
     return { name: 'couple' }
   }
