@@ -217,7 +217,7 @@ import {
 } from 'chart.js'
 import { reportService, transactionService } from '@/services'
 import type { SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse, TransactionResponse, TransactionCategory } from '@/types'
-import SummaryCard from './SummaryCard.vue'
+import SummaryCard from '../components/SummaryCard.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
 
@@ -239,7 +239,7 @@ const dateRange = computed(() => {
     const start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
     return { startDate: start, endDate: end }
   }
-  const [year, month] = selectedMonth.value.split('-').map(Number)
+  const [year = 0, month = 1] = selectedMonth.value.split('-').map(Number)
   const start = new Date(year, month - 1, 1)
   const end   = new Date(year, month, 0)
   return {
@@ -254,7 +254,7 @@ const periodLabel = computed(() => {
     const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
     return `${fmt(startDate)} — ${fmt(endDate)}`
   }
-  const [year, month] = selectedMonth.value.split('-').map(Number)
+  const [year = 0, month = 1] = selectedMonth.value.split('-').map(Number)
   return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 })
 
@@ -264,14 +264,14 @@ function selectAggregate(mode: '3m' | '6m') {
 
 function prevMonth() {
   aggregateMode.value = null
-  const [year, month] = selectedMonth.value.split('-').map(Number)
+  const [year = 0, month = 1] = selectedMonth.value.split('-').map(Number)
   const d = new Date(year, month - 2, 1)
   selectedMonth.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
 function nextMonth() {
   aggregateMode.value = null
-  const [year, month] = selectedMonth.value.split('-').map(Number)
+  const [year = 0, month = 1] = selectedMonth.value.split('-').map(Number)
   const d = new Date(year, month, 1)
   selectedMonth.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
@@ -374,7 +374,7 @@ const barOptions = {
   plugins: { legend: { display: false }, tooltip: { mode: 'index' as const } },
   scales: {
     x: { grid: { display: false }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 } } },
-    y: { grid: { color: '#f1f0ee' }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 }, callback: (v: any) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) } }
+    y: { grid: { color: '#f1f0ee' }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 }, callback: (v: string | number) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) } }
   }
 }
 
@@ -382,7 +382,7 @@ const doughnutOptions = {
   responsive: true,
   maintainAspectRatio: false,
   cutout: '70%',
-  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: any) => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } } }
+  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: { raw: unknown }) => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } } }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
