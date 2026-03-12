@@ -5,20 +5,40 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div>
         <p class="text-surface-400 text-sm">Período</p>
-        <p class="font-display text-surface-900 font-semibold text-lg">{{ periodLabel }}</p>
+        <p class="font-display text-surface-900 font-semibold text-lg capitalize">{{ periodLabel }}</p>
       </div>
       <div class="flex items-center gap-2">
+        <!-- Navegação por mês -->
+        <div class="flex items-center gap-1 bg-white border border-surface-200 rounded-xl px-1 py-1">
+          <button
+            @click="prevMonth"
+            class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 transition-colors"
+          >
+            <i class="pi pi-chevron-left text-xs" />
+          </button>
+          <span class="text-sm font-medium text-surface-700 px-1 min-w-[90px] text-center capitalize">
+            {{ new Date(selectedMonth + '-15').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) }}
+          </span>
+          <button
+            @click="nextMonth"
+            :disabled="isCurrentMonth"
+            class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <i class="pi pi-chevron-right text-xs" />
+          </button>
+        </div>
+
+        <!-- Modos agregados -->
         <button
-          v-for="opt in periodOptions"
-          :key="opt.value"
-          @click="selectPeriod(opt.value)"
-          class="flex-1 sm:flex-none px-3 lg:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-          :class="activePeriod === opt.value
-            ? 'bg-surface-900 text-white'
-            : 'bg-white border border-surface-200 text-surface-600 hover:border-surface-300'"
-        >
-          {{ opt.label }}
-        </button>
+          @click="selectAggregate('3m')"
+          class="px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+          :class="aggregateMode === '3m' ? 'bg-surface-900 text-white' : 'bg-white border border-surface-200 text-surface-600 hover:border-surface-300'"
+        >3 meses</button>
+        <button
+          @click="selectAggregate('6m')"
+          class="px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+          :class="aggregateMode === '6m' ? 'bg-surface-900 text-white' : 'bg-white border border-surface-200 text-surface-600 hover:border-surface-300'"
+        >6 meses</button>
       </div>
     </div>
 
@@ -92,7 +112,9 @@
         </div>
 
         <template v-else-if="categoryData && categoryData.categories.length > 0">
-          <Doughnut :data="doughnutChartData!" :options="doughnutOptions" class="h-32 lg:h-36 mx-auto" />
+          <div class="relative h-32 lg:h-36 w-full mx-auto">
+            <Doughnut :data="doughnutChartData!" :options="doughnutOptions" />
+          </div>
           <ul class="mt-4 space-y-2">
             <li
               v-for="(cat, i) in categoryData.categories.slice(0, 4)"
@@ -193,54 +215,74 @@ import {
   CategoryScale, LinearScale, BarElement,
   ArcElement, Tooltip, Legend
 } from 'chart.js'
-import type { TooltipItem } from 'chart.js'
 import { reportService, transactionService } from '@/services'
 import type { SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse, TransactionResponse, TransactionCategory } from '@/types'
-import SummaryCard from '../components/SummaryCard.vue'
+import SummaryCard from './SummaryCard.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
 
 // ── Period ────────────────────────────────────────────────────────────────────
 
-const periodOptions: { label: string; value: 'month' | '3m' | '6m' }[] = [
-  { label: 'Este mês', value: 'month' },
-  { label: '3 meses',  value: '3m' },
-  { label: '6 meses',  value: '6m' }
-]
+// Mês selecionado no navegador (formato YYYY-MM), inicia no mês atual
+const today         = new Date()
+const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
 
-const activePeriod = ref<'month' | '3m' | '6m'>('month')
+// Modo agregado: null = mês específico, '3m' ou '6m' = período relativo
+const aggregateMode = ref<'3m' | '6m' | null>(null)
 
 const dateRange = computed(() => {
-  const today = new Date()
-  const end = today.toISOString().slice(0, 10)
-  let start: string
-
-  if (activePeriod.value === 'month') {
-    start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10)
-  } else if (activePeriod.value === '3m') {
-    const d = new Date(today)
-    d.setMonth(d.getMonth() - 2)
-    start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
-  } else {
-    const d = new Date(today)
-    d.setMonth(d.getMonth() - 5)
-    start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+  if (aggregateMode.value) {
+    const d = new Date()
+    const end = d.toISOString().slice(0, 10)
+    const months = aggregateMode.value === '3m' ? 2 : 5
+    d.setMonth(d.getMonth() - months)
+    const start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+    return { startDate: start, endDate: end }
   }
-
-  return { startDate: start, endDate: end }
+  const [year, month] = selectedMonth.value.split('-').map(Number)
+  const start = new Date(year, month - 1, 1)
+  const end   = new Date(year, month, 0)
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate:   end.toISOString().slice(0, 10)
+  }
 })
 
 const periodLabel = computed(() => {
-  const { startDate, endDate } = dateRange.value
-  const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
-  const start = fmt(startDate)
-  const end   = fmt(endDate)
-  return start === end ? start : `${start} — ${end}`
+  if (aggregateMode.value) {
+    const { startDate, endDate } = dateRange.value
+    const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+    return `${fmt(startDate)} — ${fmt(endDate)}`
+  }
+  const [year, month] = selectedMonth.value.split('-').map(Number)
+  return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 })
 
-function selectPeriod(v: 'month' | '3m' | '6m') {
-  activePeriod.value = v
+function selectAggregate(mode: '3m' | '6m') {
+  aggregateMode.value = aggregateMode.value === mode ? null : mode
 }
+
+function prevMonth() {
+  aggregateMode.value = null
+  const [year, month] = selectedMonth.value.split('-').map(Number)
+  const d = new Date(year, month - 2, 1)
+  selectedMonth.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function nextMonth() {
+  aggregateMode.value = null
+  const [year, month] = selectedMonth.value.split('-').map(Number)
+  const d = new Date(year, month, 1)
+  selectedMonth.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+// Impede navegação além do mês atual
+const isCurrentMonth = computed(() => {
+  const now = new Date()
+  const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  return selectedMonth.value >= cur
+})
+
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -282,7 +324,7 @@ async function loadAll() {
 }
 
 onMounted(loadAll)
-watch(activePeriod, loadAll)
+watch([selectedMonth, aggregateMode], loadAll)
 
 // ── Charts ────────────────────────────────────────────────────────────────────
 
@@ -332,7 +374,7 @@ const barOptions = {
   plugins: { legend: { display: false }, tooltip: { mode: 'index' as const } },
   scales: {
     x: { grid: { display: false }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 } } },
-    y: { grid: { color: '#f1f0ee' }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 }, callback: (v: number | string) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) } }
+    y: { grid: { color: '#f1f0ee' }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 }, callback: (v: any) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) } }
   }
 }
 
@@ -340,7 +382,7 @@ const doughnutOptions = {
   responsive: true,
   maintainAspectRatio: false,
   cutout: '70%',
-  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: TooltipItem<'doughnut'>) => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } } }
+  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: any) => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } } }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
