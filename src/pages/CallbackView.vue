@@ -40,20 +40,23 @@ onMounted(async () => {
   const params = new URLSearchParams(window.location.search)
   const accessToken  = params.get('access_token')
   const refreshToken = params.get('refresh_token')
+  // O Spring preserva o redirect via state do OAuth2 — o frontend salva no sessionStorage antes de iniciar o fluxo
+  const redirect = sessionStorage.getItem('oauth2_redirect')
 
   if (!accessToken || !refreshToken) {
     error.value = 'Tokens não encontrados na URL. Tente fazer login novamente.'
     return
   }
 
-  // Limpa tokens da URL sem reload
   window.history.replaceState({}, document.title, window.location.pathname)
+  sessionStorage.removeItem('oauth2_redirect')
 
   try {
     await auth.handleCallback(accessToken, refreshToken)
 
-    // Redireciona: usuário sem casal vai para /couple, com casal para /dashboard
-    if (auth.hasCouple) {
+    if (redirect) {
+      await router.push(redirect)
+    } else if (auth.hasCouple) {
       router.push('/dashboard')
     } else {
       router.push('/couple')

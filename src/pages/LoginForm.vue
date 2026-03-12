@@ -264,6 +264,13 @@ async function submitLocal() {
 
 function loginWithGoogle() {
   loading.value = true
+  // Salva o redirect para o CallbackView restaurar após o OAuth2
+  const redirect = route.query.redirect as string | undefined
+  if (redirect) {
+    sessionStorage.setItem('oauth2_redirect', redirect)
+  } else {
+    sessionStorage.removeItem('oauth2_redirect')
+  }
   const apiUrl = import.meta.env.VITE_API_URL ?? ''
   window.location.href = apiUrl + '/oauth2/authorization/google'
 }
