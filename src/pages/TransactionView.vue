@@ -286,7 +286,6 @@
       </div>
     </Dialog>
 
-    <ConfirmDialog />
   </div>
 </template>
 
@@ -294,7 +293,6 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { transactionService, categoryService } from '@/services'
