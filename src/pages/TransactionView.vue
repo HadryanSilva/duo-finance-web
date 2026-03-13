@@ -80,8 +80,8 @@
 
       <!-- Badge: resultado da busca -->
       <p v-if="debouncedSearch && !loading" class="text-xs text-surface-400">
-        <template v-if="page.totalElements > 0">
-          {{ page.totalElements }} resultado{{ page.totalElements !== 1 ? 's' : '' }} para
+        <template v-if="page.page.totalElements > 0">
+          {{ page.page.totalElements }} resultado{{ page.page.totalElements !== 1 ? 's' : '' }} para
           <span class="font-medium text-surface-700">"{{ debouncedSearch }}"</span>
         </template>
         <template v-else>
@@ -211,23 +211,23 @@
 
       <!-- Paginação -->
       <div
-        v-if="page.totalPages > 1"
+        v-if="page.page.totalPages > 1"
         class="flex items-center justify-between px-4 lg:px-6 py-4 border-t border-surface-100"
       >
         <p class="text-xs text-surface-400">
-          {{ page.totalElements }} transações · pág. {{ page.number + 1 }}/{{ page.totalPages }}
+          {{ page.page.totalElements }} transações · pág. {{ page.page.number + 1 }}/{{ page.page.totalPages }}
         </p>
         <div class="flex items-center gap-1">
           <button
-            @click="goPage(page.number - 1)"
-            :disabled="page.first"
+            @click="goPage(page.page.number - 1)"
+            :disabled="page.page.number === 0"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <i class="pi pi-chevron-left text-xs" />
           </button>
           <button
-            @click="goPage(page.number + 1)"
-            :disabled="page.last"
+            @click="goPage(page.page.number + 1)"
+            :disabled="page.page.number + 1 >= page.page.totalPages"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <i class="pi pi-chevron-right text-xs" />
@@ -378,7 +378,7 @@ const dateRange = computed(() => {
 
 // ── Dados ─────────────────────────────────────────────────────────────────────
 
-const emptyPage: Page<TransactionResponse> = { content: [], totalElements: 0, totalPages: 0, number: 0, size: 15, first: true, last: true }
+const emptyPage: Page<TransactionResponse> = { content: [], page: { size: 15, totalElements: 0, totalPages: 0, number: 0 } }
 const page        = ref<Page<TransactionResponse>>(emptyPage)
 const categories  = ref<CategoryResponse[]>([])
 const loading     = ref(false)

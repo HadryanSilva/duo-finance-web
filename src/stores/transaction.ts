@@ -15,12 +15,7 @@ import type { CreateTransactionPayload, TransactionFilters } from '@/services'
 
 const emptyPage: Page<TransactionResponse> = {
   content: [],
-  totalElements: 0,
-  totalPages: 0,
-  number: 0,
-  size: 15,
-  first: true,
-  last: true
+  page: { size: 15, totalElements: 0, totalPages: 0, number: 0 }
 }
 
 export const useTransactionStore = defineStore('transaction', () => {
@@ -68,7 +63,6 @@ export const useTransactionStore = defineStore('transaction', () => {
     error.value      = null
     try {
       const created = await transactionService.create(payload)
-      // Recarrega a página atual para refletir o novo item
       await fetchTransactions()
       return created
     } catch (e: unknown) {
@@ -84,7 +78,6 @@ export const useTransactionStore = defineStore('transaction', () => {
     error.value      = null
     try {
       const updated = await transactionService.update(id, payload)
-      // Atualiza o item na lista local sem precisar recarregar tudo
       const idx = page.value.content.findIndex(t => t.id === id)
       if (idx !== -1) page.value.content[idx] = updated
       return updated
@@ -101,12 +94,11 @@ export const useTransactionStore = defineStore('transaction', () => {
     error.value      = null
     try {
       await transactionService.delete(id)
-      // Remove da lista local imediatamente (optimistic)
-      page.value.content      = page.value.content.filter(t => t.id !== id)
-      const newTotal          = Math.max(0, page.value.totalElements - 1)
-      page.value.totalElements = newTotal
-      page.value.totalPages   = Math.max(1, Math.ceil(newTotal / page.value.size))
-      page.value.last         = (page.value.number + 1) >= page.value.totalPages
+      // Otimista: remove da lista local sem recarregar
+      page.value.content            = page.value.content.filter(t => t.id !== id)
+      const newTotal                = Math.max(0, page.value.page.totalElements - 1)
+      page.value.page.totalElements = newTotal
+      page.value.page.totalPages    = Math.max(1, Math.ceil(newTotal / page.value.page.size))
     } catch (e: unknown) {
       error.value = apiMessage(e, 'Erro ao remover transação')
       throw e
@@ -117,7 +109,7 @@ export const useTransactionStore = defineStore('transaction', () => {
 
   function setFilter<K extends keyof TransactionFilters>(key: K, value: TransactionFilters[K]) {
     filters[key] = value
-    filters.page = 0  // volta para a primeira página ao filtrar
+    filters.page = 0
   }
 
   function setPage(n: number) {
