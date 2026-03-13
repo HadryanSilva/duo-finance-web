@@ -286,7 +286,6 @@
       </div>
     </Dialog>
 
-    <ConfirmDialog />
   </div>
 </template>
 
@@ -294,7 +293,6 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { transactionService, categoryService } from '@/services'
@@ -448,6 +446,16 @@ async function handleSubmit(payload: CreateTransactionPayload) {
   }
 }
 
+async function executeDelete(tx: TransactionResponse) {
+  try {
+    await transactionService.delete(tx.id)
+    toast.add({ severity: 'success', summary: 'Removido', detail: 'Transação removida.', life: 3000 })
+    await loadTransactions()
+  } catch {
+    toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível remover. Tente novamente.', life: 4000 })
+  }
+}
+
 function confirmDelete(tx: TransactionResponse) {
   confirm.require({
     message: `Remover "${tx.description || tx.categoryLabel}"?`,
@@ -456,11 +464,7 @@ function confirmDelete(tx: TransactionResponse) {
     rejectLabel: 'Cancelar',
     acceptLabel: 'Remover',
     acceptClass: 'p-button-danger',
-    accept: async () => {
-      await transactionService.delete(tx.id)
-      toast.add({ severity: 'success', summary: 'Removido', detail: 'Transação removida.', life: 3000 })
-      await loadTransactions()
-    }
+    accept: () => { executeDelete(tx) }  // síncrono — ConfirmDialog fecha imediatamente
   })
 }
 
