@@ -155,8 +155,21 @@
                 </div>
                 <span class="text-xs text-surface-400">{{ tx.createdBy.firstName }}</span>
               </span>
-              <span v-if="tx.recurring" class="text-surface-200 text-xs">·</span>
-              <i v-if="tx.recurring" class="pi pi-sync text-surface-300 text-[10px]" />
+              <template v-if="tx.recurring || tx.parentTransactionId">
+                <span class="text-surface-200 text-xs">·</span>
+                <!-- Pai recorrente -->
+                <i
+                  v-if="tx.recurring"
+                  class="pi pi-sync text-surface-300 text-[10px]"
+                  title="Transação recorrente"
+                />
+                <!-- Filho gerado pelo job -->
+                <i
+                  v-else-if="tx.parentTransactionId"
+                  class="pi pi-replay text-primary-400 text-[10px]"
+                  title="Gerado automaticamente por recorrência"
+                />
+              </template>
             </div>
           </div>
 
@@ -395,8 +408,16 @@ function goPage(n: number) {
   currentPage.value = n
 }
 
-onMounted(() => { loadTransactions(); loadCategories() })
-watch([selectedMonth, filters, currentPage, debouncedSearch], loadTransactions)
+onMounted(async () => {
+  // Garante que os membros do casal estão carregados para o filtro de parceiro (RF28)
+  if (auth.hasCouple && !coupleStore.couple) {
+    await coupleStore.fetchCouple()
+  }
+  loadTransactions()
+  loadCategories()
+})
+watch([selectedMonth, currentPage, debouncedSearch], loadTransactions)
+watch(filters, loadTransactions, { deep: true })
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
 
