@@ -84,14 +84,31 @@ export interface CategoryResponse {
   type: TransactionType
 }
 
-export interface Page<T> {
-  content: T[]
+// ── Paginação ─────────────────────────────────────────────────────────────────
+//
+// Com @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO) o Spring
+// serializa Page com metadados aninhados em um objeto "page":
+//
+// {
+//   "content": [...],
+//   "page": {
+//     "size": 15,
+//     "totalElements": 42,
+//     "totalPages": 3,
+//     "number": 0        ← índice base-0
+//   }
+// }
+
+export interface PageMetadata {
+  size: number
   totalElements: number
   totalPages: number
   number: number
-  size: number
-  first: boolean
-  last: boolean
+}
+
+export interface Page<T> {
+  content: T[]
+  page: PageMetadata
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────
