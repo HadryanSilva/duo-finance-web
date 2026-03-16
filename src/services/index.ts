@@ -58,10 +58,10 @@ export const coupleService = {
 // ── Transactions ──────────────────────────────────────────────────────────────
 
 export interface TransactionFilters {
-  category?: string
+  category?: string            // filtro por categoria — novo
   type?: TransactionType
   userId?: string
-  description?: string       // RF27 — busca textual por descrição
+  description?: string         // RF27 — busca textual por descrição
   startDate?: string
   endDate?: string
   page?: number
