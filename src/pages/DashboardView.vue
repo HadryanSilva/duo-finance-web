@@ -68,6 +68,67 @@
       />
     </div>
 
+    <!-- Metas do mês — RF36/RF37 -->
+    <div v-if="goalStore.progress.length > 0" class="card p-0 overflow-hidden">
+      <div class="flex items-center justify-between px-4 lg:px-6 py-4 border-b border-surface-50">
+        <div>
+          <h3 class="font-display font-semibold text-surface-900">Metas do mês</h3>
+          <p class="text-surface-400 text-xs mt-0.5">Progresso dos limites definidos</p>
+        </div>
+        <RouterLink
+          to="/goals"
+          class="text-xs text-surface-500 hover:text-surface-800 transition-colors flex items-center gap-1"
+        >
+          Gerenciar <i class="pi pi-arrow-right text-[10px]" />
+        </RouterLink>
+      </div>
+
+      <div class="divide-y divide-surface-50">
+        <div
+          v-for="goal in goalStore.progress"
+          :key="goal.id"
+          class="flex items-center gap-3 lg:gap-4 px-4 lg:px-6 py-3"
+        >
+          <!-- Ícone -->
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-surface-100">
+            <i :class="[categoryIcon(goal.category), 'text-xs text-surface-600']" />
+          </div>
+
+          <!-- Barra + label -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-medium text-surface-700 truncate">{{ goal.categoryLabel }}</span>
+              <span
+                class="text-xs font-medium shrink-0 ml-2"
+                :class="goalTextColor(goal.alertLevel)"
+              >
+                {{ goal.percentage.toFixed(0) }}%
+                <span v-if="goal.alertLevel === 'EXCEEDED'">🚨</span>
+                <span v-else-if="goal.alertLevel === 'WARNING'">⚠️</span>
+              </span>
+            </div>
+            <div class="w-full bg-surface-100 rounded-full h-1.5 overflow-hidden">
+              <div
+                class="h-1.5 rounded-full transition-all duration-500"
+                :class="goalBarColor(goal.alertLevel)"
+                :style="{ width: `${goal.percentage}%` }"
+              />
+            </div>
+          </div>
+
+          <!-- Valores -->
+          <div class="text-right shrink-0 hidden sm:block">
+            <p class="text-xs font-mono font-medium text-surface-700">
+              {{ formatCurrency(goal.spent) }}
+            </p>
+            <p class="text-[10px] text-surface-400">
+              de {{ formatCurrency(goal.monthlyLimit) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Charts row -->
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
@@ -216,18 +277,18 @@ import {
   ArcElement, Tooltip, Legend
 } from 'chart.js'
 import { reportService, transactionService } from '@/services'
-import type { SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse, TransactionResponse, TransactionCategory } from '@/types'
+import { useGoalStore } from '@/stores/goal'
+import type { SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse, TransactionResponse, TransactionCategory, AlertLevel } from '@/types'
 import SummaryCard from '../components/SummaryCard.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
 
+const goalStore = useGoalStore()
+
 // ── Period ────────────────────────────────────────────────────────────────────
 
-// Mês selecionado no navegador (formato YYYY-MM), inicia no mês atual
 const today         = new Date()
 const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
-
-// Modo agregado: null = mês específico, '3m' ou '6m' = período relativo
 const aggregateMode = ref<'3m' | '6m' | null>(null)
 
 const dateRange = computed(() => {
@@ -276,13 +337,11 @@ function nextMonth() {
   selectedMonth.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
-// Impede navegação além do mês atual
 const isCurrentMonth = computed(() => {
   const now = new Date()
   const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   return selectedMonth.value >= cur
 })
-
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -299,9 +358,9 @@ const loadingTransactions = ref(false)
 async function loadAll() {
   const period = dateRange.value
 
-  loadingSummary.value   = true
-  loadingCategory.value  = true
-  loadingMonthly.value   = true
+  loadingSummary.value      = true
+  loadingCategory.value     = true
+  loadingMonthly.value      = true
   loadingTransactions.value = true
 
   await Promise.all([
@@ -319,7 +378,9 @@ async function loadAll() {
 
     transactionService.list({ ...period, size: 8 })
       .then(d => recentTransactions.value = d.content)
-      .finally(() => loadingTransactions.value = false)
+      .finally(() => loadingTransactions.value = false),
+
+    goalStore.fetchProgress()
   ])
 }
 
@@ -393,6 +454,18 @@ function formatCurrency(value: number) {
 
 function formatDate(date: string) {
   return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
+
+function goalBarColor(level: AlertLevel) {
+  if (level === 'EXCEEDED') return 'bg-red-500'
+  if (level === 'WARNING')  return 'bg-amber-400'
+  return 'bg-green-500'
+}
+
+function goalTextColor(level: AlertLevel) {
+  if (level === 'EXCEEDED') return 'text-red-500'
+  if (level === 'WARNING')  return 'text-amber-500'
+  return 'text-surface-500'
 }
 
 const categoryIconMap: Partial<Record<TransactionCategory, string>> = {

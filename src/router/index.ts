@@ -51,6 +51,11 @@ const router = createRouter({
           component: () => import('@/pages/TransactionView.vue')
         },
         {
+          path: 'goals',
+          name: 'goals',
+          component: () => import('@/pages/GoalsView.vue')
+        },
+        {
           path: 'couple',
           name: 'couple',
           component: () => import('@/pages/CoupleView.vue')
@@ -72,7 +77,7 @@ const PUBLIC_ROUTES = new Set([
 ])
 
 // ── Rotas que precisam de casal vinculado ─────────────────────────────────────
-const REQUIRES_COUPLE = new Set(['dashboard', 'transactions'])
+const REQUIRES_COUPLE = new Set(['dashboard', 'transactions', 'goals'])
 
 let sessionRestored = false
 
