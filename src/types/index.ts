@@ -149,3 +149,29 @@ export interface MonthSummary {
 export interface MonthlyComparisonResponse {
   months: MonthSummary[]
 }
+
+// ── Goals — RF35/RF36/RF37 ────────────────────────────────────────────────────
+
+export type AlertLevel = 'NONE' | 'WARNING' | 'EXCEEDED'
+
+export interface GoalResponse {
+  id: string
+  category: TransactionCategory
+  categoryLabel: string
+  monthlyLimit: number
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GoalProgressResponse {
+  id: string
+  category: TransactionCategory
+  categoryLabel: string
+  monthlyLimit: number
+  spent: number
+  remaining: number
+  percentage: number
+  alertLevel: AlertLevel
+  active: boolean
+}

@@ -4,7 +4,7 @@ import type {
   CoupleResponse, InviteResponse, JoinCoupleResponse,
   TransactionResponse, CategoryResponse, Page,
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
-  TransactionType
+  TransactionType, GoalResponse, GoalProgressResponse
 } from '@/types'
 
 // ── User ──────────────────────────────────────────────────────────────────────
@@ -114,4 +114,30 @@ export const reportService = {
     api.get<MonthlyComparisonResponse>('/reports/monthly-comparison').then(r => r.data),
   exportCsv: (period: ReportPeriod = {}) =>
     api.get<Blob>('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data)
+}
+
+// ── Goals — RF35/RF36/RF37 ────────────────────────────────────────────────────
+
+export interface CreateGoalPayload {
+  category: string
+  monthlyLimit: number
+}
+
+export interface UpdateGoalPayload {
+  monthlyLimit: number
+}
+
+export const goalService = {
+  list: () =>
+    api.get<GoalResponse[]>('/goals').then(r => r.data),
+  create: (payload: CreateGoalPayload) =>
+    api.post<GoalResponse>('/goals', payload).then(r => r.data),
+  update: (id: string, payload: UpdateGoalPayload) =>
+    api.put<GoalResponse>(`/goals/${id}`, payload).then(r => r.data),
+  toggle: (id: string) =>
+    api.patch<GoalResponse>(`/goals/${id}/toggle`).then(r => r.data),
+  delete: (id: string) =>
+    api.delete(`/goals/${id}`),
+  progress: () =>
+    api.get<GoalProgressResponse[]>('/goals/progress').then(r => r.data),
 }

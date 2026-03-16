@@ -239,13 +239,15 @@ onUnmounted(() => {
 
 const navItems = [
   { to: '/dashboard',    label: 'Dashboard',  icon: 'pi pi-chart-line' },
-  { to: '/transactions', label: 'Transações', icon: 'pi pi-list' },
-  { to: '/couple',       label: 'Casal',      icon: 'pi pi-users' }
+  { to: '/transactions', label: 'Transações', icon: 'pi pi-list'       },
+  { to: '/goals',        label: 'Metas',      icon: 'pi pi-flag'       },
+  { to: '/couple',       label: 'Casal',      icon: 'pi pi-users'      }
 ]
 
 const routeTitles: Record<string, string> = {
   '/dashboard':    'Dashboard',
   '/transactions': 'Transações',
+  '/goals':        'Metas',
   '/couple':       'Nosso casal'
 }
 
