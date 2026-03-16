@@ -206,6 +206,7 @@ import { useToast } from 'primevue/usetoast'
 import { useGoalStore } from '@/stores/goal'
 import { categoryService } from '@/services'
 import type { GoalResponse, GoalProgressResponse, TransactionCategory, CategoryResponse, AlertLevel } from '@/types'
+import { categoryIcon } from '@/utils/categoryIcon'
 
 const confirm   = useConfirm()
 const toast     = useToast()
@@ -332,20 +333,5 @@ function progressTextColor(level: AlertLevel) {
   if (level === 'EXCEEDED') return 'text-red-500'
   if (level === 'WARNING')  return 'text-amber-500'
   return 'text-surface-500'
-}
-
-const categoryIconMap: Partial<Record<TransactionCategory, string>> = {
-  FOOD: 'pi pi-shopping-bag',     HOUSING: 'pi pi-home',
-  TRANSPORT: 'pi pi-car',         HEALTH: 'pi pi-heart',
-  EDUCATION: 'pi pi-book',        LEISURE: 'pi pi-star',
-  CLOTHING: 'pi pi-tag',          PETS: 'pi pi-heart-fill',
-  SUBSCRIPTIONS: 'pi pi-sync',    OTHER_EXPENSE: 'pi pi-minus-circle',
-  SALARY: 'pi pi-briefcase',      FREELANCE: 'pi pi-code',
-  INVESTMENTS: 'pi pi-chart-bar', RENTAL: 'pi pi-building',
-  GIFT: 'pi pi-gift',             OTHER_INCOME: 'pi pi-plus-circle'
-}
-
-function categoryIcon(cat: TransactionCategory) {
-  return categoryIconMap[cat] ?? 'pi pi-circle'
 }
 </script>

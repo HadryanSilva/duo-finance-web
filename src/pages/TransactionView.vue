@@ -310,11 +310,12 @@ import Dialog from 'primevue/dialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { transactionService, categoryService } from '@/services'
-import type { TransactionResponse, CategoryResponse, TransactionType, TransactionCategory, Page } from '@/types'
+import type { TransactionResponse, CategoryResponse, TransactionType, Page } from '@/types'
 import type { CreateTransactionPayload } from '@/services'
 import TransactionForm from './TransactionForm.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
+import { categoryIcon } from '@/utils/categoryIcon'
 
 const confirm     = useConfirm()
 const toast       = useToast()
@@ -519,21 +520,6 @@ function formatCurrency(v: number) {
 
 function formatDate(date: string) {
   return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
-const categoryIconMap: Partial<Record<TransactionCategory, string>> = {
-  FOOD: 'pi pi-shopping-bag',   HOUSING: 'pi pi-home',
-  TRANSPORT: 'pi pi-car',       HEALTH: 'pi pi-heart',
-  EDUCATION: 'pi pi-book',      LEISURE: 'pi pi-star',
-  CLOTHING: 'pi pi-tag',        PETS: 'pi pi-heart-fill',
-  SUBSCRIPTIONS: 'pi pi-sync',  OTHER_EXPENSE: 'pi pi-minus-circle',
-  SALARY: 'pi pi-briefcase',    FREELANCE: 'pi pi-code',
-  INVESTMENTS: 'pi pi-chart-bar', RENTAL: 'pi pi-building',
-  GIFT: 'pi pi-gift',           OTHER_INCOME: 'pi pi-plus-circle'
-}
-
-function categoryIcon(cat: TransactionCategory) {
-  return categoryIconMap[cat] ?? 'pi pi-circle'
 }
 </script>
 
