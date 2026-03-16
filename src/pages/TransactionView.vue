@@ -10,7 +10,7 @@
           <button
             v-for="opt in typeFilter"
             :key="String(opt.value)"
-            @click="filters.type = filters.type === opt.value ? undefined : opt.value; currentPage = 0"
+            @click="selectType(opt.value)"
             class="px-3 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-medium transition-all duration-150 border"
             :class="filters.type === opt.value
               ? opt.activeClass
@@ -48,7 +48,7 @@
         />
       </div>
 
-      <!-- Linha 2: busca + mês -->
+      <!-- Linha 2: busca + categoria + mês -->
       <div class="flex flex-col sm:flex-row gap-2">
 
         <!-- Campo de busca — RF27 -->
@@ -69,6 +69,45 @@
           </button>
         </div>
 
+        <!-- Filtro por categoria -->
+        <div class="relative">
+          <select
+            v-model="filters.category"
+            @change="currentPage = 0"
+            class="w-full sm:w-auto text-sm border rounded-xl px-3 py-2 bg-white text-surface-700 focus:outline-none focus:border-surface-400 transition-colors appearance-none pr-8"
+            :class="filters.category
+              ? 'border-surface-900 text-surface-900 font-medium'
+              : 'border-surface-200'"
+          >
+            <option :value="undefined">Todas as categorias</option>
+            <optgroup
+              v-if="expenseCategories.length"
+              label="Despesas"
+            >
+              <option
+                v-for="cat in expenseCategories"
+                :key="cat.name"
+                :value="cat.name"
+              >
+                {{ cat.label }}
+              </option>
+            </optgroup>
+            <optgroup
+              v-if="incomeCategories.length && !filters.type"
+              label="Receitas"
+            >
+              <option
+                v-for="cat in incomeCategories"
+                :key="cat.name"
+                :value="cat.name"
+              >
+                {{ cat.label }}
+              </option>
+            </optgroup>
+          </select>
+          <i class="pi pi-chevron-down text-[10px] text-surface-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
+
         <!-- Seletor de mês -->
         <select
           v-model="selectedMonth"
@@ -78,8 +117,30 @@
         </select>
       </div>
 
+      <!-- Badges de filtros ativos -->
+      <div v-if="hasActiveFilters" class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs text-surface-400">Filtros:</span>
+
+        <button
+          v-if="filters.category"
+          @click="filters.category = undefined; currentPage = 0"
+          class="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-100 text-surface-700 text-xs hover:bg-surface-200 transition-colors"
+        >
+          <i :class="[categoryIcon(filters.category as TransactionCategory), 'text-[10px]']" />
+          {{ categoryLabel(filters.category as TransactionCategory) }}
+          <i class="pi pi-times text-[9px] ml-0.5 text-surface-400" />
+        </button>
+
+        <button
+          @click="clearFilters"
+          class="text-xs text-surface-400 hover:text-surface-700 transition-colors underline underline-offset-2"
+        >
+          Limpar tudo
+        </button>
+      </div>
+
       <!-- Badge: resultado da busca -->
-      <p v-if="debouncedSearch && !loading" class="text-xs text-surface-400">
+      <p v-else-if="debouncedSearch && !loading" class="text-xs text-surface-400">
         <template v-if="page.page.totalElements > 0">
           {{ page.page.totalElements }} resultado{{ page.page.totalElements !== 1 ? 's' : '' }} para
           <span class="font-medium text-surface-700">"{{ debouncedSearch }}"</span>
@@ -112,8 +173,15 @@
       <div v-else-if="page.content.length === 0" class="py-20 text-center">
         <i class="pi pi-inbox text-surface-200 text-4xl mb-3 block" />
         <p class="text-surface-400">
-          {{ debouncedSearch ? 'Nenhuma transação encontrada para essa busca.' : 'Nenhuma transação encontrada.' }}
+          {{ emptyMessage }}
         </p>
+        <button
+          v-if="hasActiveFilters"
+          @click="clearFilters"
+          class="mt-3 text-xs text-surface-500 hover:text-surface-800 underline underline-offset-2 transition-colors"
+        >
+          Limpar filtros
+        </button>
       </div>
 
       <!-- Linhas -->
@@ -140,6 +208,16 @@
             <div class="flex items-center gap-1.5 mt-0.5">
               <span class="text-xs text-surface-400">{{ formatDate(tx.date) }}</span>
               <span class="text-surface-200 text-xs">·</span>
+              <!-- Categoria como badge clicável -->
+              <button
+                @click="filters.category = tx.category; currentPage = 0"
+                class="text-xs text-surface-400 hover:text-surface-700 transition-colors"
+                :class="{ 'font-medium text-surface-600': filters.category === tx.category }"
+                :title="`Filtrar por ${tx.categoryLabel}`"
+              >
+                {{ tx.categoryLabel }}
+              </button>
+              <span class="text-surface-200 text-xs">·</span>
               <span class="flex items-center gap-1">
                 <img
                   v-if="tx.createdBy.avatarUrl"
@@ -157,13 +235,11 @@
               </span>
               <template v-if="tx.recurring || tx.parentTransactionId">
                 <span class="text-surface-200 text-xs">·</span>
-                <!-- Pai recorrente -->
                 <i
                   v-if="tx.recurring"
                   class="pi pi-sync text-surface-300 text-[10px]"
                   title="Transação recorrente"
                 />
-                <!-- Filho gerado pelo job -->
                 <i
                   v-else-if="tx.parentTransactionId"
                   class="pi pi-replay text-primary-400 text-[10px]"
@@ -260,22 +336,16 @@
           v-if="showMobileMenu"
           class="fixed inset-0 z-50 lg:hidden"
         >
-          <!-- Backdrop -->
           <div
             class="absolute inset-0 bg-black/40"
             @click="showMobileMenu = false"
           />
-
-          <!-- Sheet -->
           <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-2xl p-4 space-y-1 sheet-panel">
             <div v-if="mobileMenuTx">
-              <!-- Handle -->
               <div class="w-10 h-1 rounded-full bg-surface-200 mx-auto mb-4" />
-
               <p class="text-sm font-medium text-surface-700 mb-3 px-1 truncate">
                 {{ mobileMenuTx.description || mobileMenuTx.categoryLabel }}
               </p>
-
               <button
                 @click="openEdit(mobileMenuTx!); showMobileMenu = false"
                 class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-surface-700 hover:bg-surface-50 transition-colors"
@@ -310,7 +380,7 @@ import Dialog from 'primevue/dialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { transactionService, categoryService } from '@/services'
-import type { TransactionResponse, CategoryResponse, TransactionType, Page } from '@/types'
+import type { TransactionResponse, CategoryResponse, TransactionType, TransactionCategory, Page } from '@/types'
 import type { CreateTransactionPayload } from '@/services'
 import TransactionForm from './TransactionForm.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -344,7 +414,35 @@ const monthOptions = computed(() => {
   return opts
 })
 
-const filters = reactive<{ type?: TransactionType; userId?: string }>({ type: undefined, userId: undefined })
+const filters = reactive<{ type?: TransactionType; userId?: string; category?: TransactionCategory }>({
+  type: undefined, userId: undefined, category: undefined
+})
+
+// Ao mudar o tipo, limpa a categoria se ela não pertence ao novo tipo
+function selectType(type: TransactionType | undefined) {
+  if (filters.category) {
+    const cat = categories.value.find(c => c.name === filters.category)
+    if (cat && type && cat.type !== type) {
+      filters.category = undefined
+    }
+  }
+  filters.type = filters.type === type ? undefined : type
+  currentPage.value = 0
+}
+
+// ── Categorias agrupadas para o select ────────────────────────────────────────
+
+const expenseCategories = computed(() =>
+  filters.type === 'INCOME'
+    ? []
+    : categories.value.filter(c => c.type === 'EXPENSE')
+)
+
+const incomeCategories = computed(() =>
+  filters.type === 'EXPENSE'
+    ? []
+    : categories.value.filter(c => c.type === 'INCOME')
+)
 
 // ── Filtro por parceiro — RF28 ────────────────────────────────────────────────
 
@@ -360,6 +458,19 @@ const partnerFilter = computed(() => {
     }))
   ]
 })
+
+// ── Filtros ativos ────────────────────────────────────────────────────────────
+
+const hasActiveFilters = computed(() =>
+  !!filters.category || !!debouncedSearch.value
+)
+
+function clearFilters() {
+  filters.category = undefined
+  searchInput.value = ''
+  debouncedSearch.value = ''
+  currentPage.value = 0
+}
 
 // ── Busca textual com debounce — RF27 ─────────────────────────────────────────
 
@@ -387,6 +498,17 @@ const dateRange = computed(() => {
   }
 })
 
+// ── Mensagem de lista vazia contextual ────────────────────────────────────────
+
+const emptyMessage = computed(() => {
+  if (filters.category) {
+    const label = categoryLabel(filters.category)
+    return `Nenhuma transação em "${label}" neste período.`
+  }
+  if (debouncedSearch.value) return 'Nenhuma transação encontrada para essa busca.'
+  return 'Nenhuma transação encontrada.'
+})
+
 // ── Dados ─────────────────────────────────────────────────────────────────────
 
 const emptyPage: Page<TransactionResponse> = { content: [], page: { size: 15, totalElements: 0, totalPages: 0, number: 0 } }
@@ -402,6 +524,7 @@ async function loadTransactions() {
       ...dateRange.value,
       type:        filters.type,
       userId:      filters.userId,
+      category:    filters.category,
       description: debouncedSearch.value || undefined,
       page:        currentPage.value,
       size:        15
@@ -492,6 +615,10 @@ function openMobileMenu(tx: TransactionResponse) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function categoryLabel(cat: TransactionCategory): string {
+  return categories.value.find(c => c.name === cat)?.label ?? cat
+}
+
 function highlightMatch(text: string): string {
   const term = debouncedSearch.value
   if (!term) return escapeHtml(text)
@@ -524,7 +651,6 @@ function formatDate(date: string) {
 </script>
 
 <style scoped>
-/* ── Bottom sheet animation ─────────────────────────────────────────────────── */
 .bottom-sheet-enter-active,
 .bottom-sheet-leave-active {
   transition: opacity 0.25s ease;
@@ -541,8 +667,6 @@ function formatDate(date: string) {
 .bottom-sheet-leave-to .sheet-panel {
   transform: translateY(100%);
 }
-
-/* Safe area para dispositivos com notch/home indicator */
 .sheet-panel {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
