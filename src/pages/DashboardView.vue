@@ -89,12 +89,9 @@
           :key="goal.id"
           class="flex items-center gap-3 lg:gap-4 px-4 lg:px-6 py-3"
         >
-          <!-- Ícone -->
           <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-surface-100">
             <i :class="[categoryIcon(goal.category), 'text-xs text-surface-600']" />
           </div>
-
-          <!-- Barra + label -->
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between mb-1">
               <span class="text-xs font-medium text-surface-700 truncate">{{ goal.categoryLabel }}</span>
@@ -115,15 +112,9 @@
               />
             </div>
           </div>
-
-          <!-- Valores -->
           <div class="text-right shrink-0 hidden sm:block">
-            <p class="text-xs font-mono font-medium text-surface-700">
-              {{ formatCurrency(goal.spent) }}
-            </p>
-            <p class="text-[10px] text-surface-400">
-              de {{ formatCurrency(goal.monthlyLimit) }}
-            </p>
+            <p class="text-xs font-mono font-medium text-surface-700">{{ formatCurrency(goal.spent) }}</p>
+            <p class="text-[10px] text-surface-400">de {{ formatCurrency(goal.monthlyLimit) }}</p>
           </div>
         </div>
       </div>
@@ -161,11 +152,20 @@
 
       <!-- Por categoria -->
       <div class="lg:col-span-2 card">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-4">
           <div>
             <h3 class="font-display font-semibold text-surface-900">Por categoria</h3>
             <p class="text-surface-400 text-xs mt-0.5">Despesas do período</p>
           </div>
+          <!-- Toggle mostrar todas / top 4 — só aparece se houver mais de 4 -->
+          <button
+            v-if="categoryData && categoryData.categories.length > 4"
+            @click="showAllCategories = !showAllCategories"
+            class="flex items-center gap-1 text-xs text-surface-500 hover:text-surface-800 transition-colors"
+          >
+            <span>{{ showAllCategories ? 'Top 4' : 'Ver todas' }}</span>
+            <i :class="showAllCategories ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-[10px]" />
+          </button>
         </div>
 
         <div v-if="loadingCategory" class="h-48 lg:h-52 flex items-center justify-center">
@@ -173,25 +173,40 @@
         </div>
 
         <template v-else-if="categoryData && categoryData.categories.length > 0">
+          <!-- Gráfico doughnut -->
           <div class="relative h-32 lg:h-36 w-full mx-auto">
             <Doughnut :data="doughnutChartData!" :options="doughnutOptions" />
           </div>
-          <ul class="mt-4 space-y-2">
+
+          <!-- Legenda com todas ou top 4 -->
+          <ul class="mt-4 space-y-1.5">
             <li
-              v-for="(cat, i) in categoryData.categories.slice(0, 4)"
+              v-for="(cat, i) in visibleCategories"
               :key="cat.category"
-              class="flex items-center justify-between text-xs"
+              class="flex items-center justify-between text-xs group"
             >
-              <span class="flex items-center gap-2 text-surface-600">
+              <span class="flex items-center gap-2 text-surface-600 min-w-0">
                 <span
                   class="w-2 h-2 rounded-full shrink-0"
-                  :style="{ backgroundColor: doughnutColors[i] }"
+                  :style="{ backgroundColor: doughnutColors[i % doughnutColors.length] }"
                 />
-                {{ cat.categoryLabel }}
+                <span class="truncate">{{ cat.categoryLabel }}</span>
               </span>
-              <span class="font-medium text-surface-800">{{ formatCurrency(cat.amount) }}</span>
+              <span class="flex items-center gap-2 shrink-0 ml-2">
+                <span class="text-surface-400">{{ cat.percentage.toFixed(1) }}%</span>
+                <span class="font-medium text-surface-800">{{ formatCurrency(cat.amount) }}</span>
+              </span>
             </li>
           </ul>
+
+          <!-- Link "e mais N categorias" quando colapsado -->
+          <button
+            v-if="!showAllCategories && categoryData.categories.length > 4"
+            @click="showAllCategories = true"
+            class="mt-2 w-full text-center text-xs text-surface-400 hover:text-surface-700 transition-colors py-1"
+          >
+            + {{ categoryData.categories.length - 4 }} categorias
+          </button>
         </template>
 
         <div v-else class="h-48 lg:h-52 flex flex-col items-center justify-center text-center">
@@ -364,6 +379,9 @@ async function loadAll() {
   loadingMonthly.value      = true
   loadingTransactions.value = true
 
+  // Colapsa ao trocar período
+  showAllCategories.value = false
+
   await Promise.all([
     reportService.summary(period)
       .then(d => summary.value = d)
@@ -388,9 +406,32 @@ async function loadAll() {
 onMounted(loadAll)
 watch([selectedMonth, aggregateMode], loadAll)
 
+// ── Categorias — toggle ver todas / top 4 ─────────────────────────────────────
+
+const showAllCategories = ref(false)
+
+const visibleCategories = computed(() => {
+  const cats = categoryData.value?.categories ?? []
+  return showAllCategories.value ? cats : cats.slice(0, 4)
+})
+
 // ── Charts ────────────────────────────────────────────────────────────────────
 
-const doughnutColors = ['#1d4ed8', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+// Paleta expandida para suportar até 12 categorias de despesa
+const doughnutColors = [
+  '#1d4ed8', // azul
+  '#22c55e', // verde
+  '#f59e0b', // âmbar
+  '#ef4444', // vermelho
+  '#8b5cf6', // violeta
+  '#06b6d4', // ciano
+  '#f97316', // laranja
+  '#ec4899', // rosa
+  '#14b8a6', // teal
+  '#a855f7', // roxo
+  '#84cc16', // lima
+  '#64748b', // slate
+]
 
 const monthlyChartData = computed(() => {
   if (!monthlyData.value) return null
@@ -416,14 +457,15 @@ const monthlyChartData = computed(() => {
   }
 })
 
+// O gráfico doughnut sempre mostra todas as categorias — a legenda é que colapsa
 const doughnutChartData = computed(() => {
   if (!categoryData.value || categoryData.value.categories.length === 0) return null
-  const cats = categoryData.value.categories.slice(0, 4)
+  const cats = categoryData.value.categories
   return {
     labels: cats.map(c => c.categoryLabel),
     datasets: [{
       data: cats.map(c => c.amount),
-      backgroundColor: doughnutColors,
+      backgroundColor: cats.map((_, i) => doughnutColors[i % doughnutColors.length]),
       borderWidth: 0,
       hoverOffset: 4
     }]
@@ -444,7 +486,15 @@ const doughnutOptions = {
   responsive: true,
   maintainAspectRatio: false,
   cutout: '70%',
-  plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: { raw: unknown }) => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } } }
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: (ctx: { raw: unknown; label: string }) =>
+          ` ${ctx.label}: R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      }
+    }
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
