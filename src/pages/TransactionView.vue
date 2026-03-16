@@ -254,37 +254,51 @@
     </Dialog>
 
     <!-- Bottom sheet mobile -->
-    <Dialog
-      v-model:visible="showMobileMenu"
-      :modal="true"
-      :showHeader="false"
-      :style="{ width: '100vw', margin: 0, borderRadius: '16px 16px 0 0', position: 'fixed', bottom: 0 }"
-      :pt="{ root: { style: 'align-items: flex-end' }, content: { class: 'p-4' } }"
-    >
-      <div v-if="mobileMenuTx" class="space-y-1">
-        <p class="text-sm font-medium text-surface-700 mb-3 px-1">
-          {{ mobileMenuTx.description || mobileMenuTx.categoryLabel }}
-        </p>
-        <button
-          @click="openEdit(mobileMenuTx!); showMobileMenu = false"
-          class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-surface-700 hover:bg-surface-50 transition-colors"
+    <Teleport to="body">
+      <Transition name="bottom-sheet">
+        <div
+          v-if="showMobileMenu"
+          class="fixed inset-0 z-50 lg:hidden"
         >
-          <i class="pi pi-pencil text-surface-400" /> Editar
-        </button>
-        <button
-          @click="confirmDelete(mobileMenuTx!); showMobileMenu = false"
-          class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors"
-        >
-          <i class="pi pi-trash" /> Excluir
-        </button>
-        <button
-          @click="showMobileMenu = false"
-          class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-surface-400 hover:bg-surface-50 transition-colors"
-        >
-          <i class="pi pi-times text-surface-300" /> Cancelar
-        </button>
-      </div>
-    </Dialog>
+          <!-- Backdrop -->
+          <div
+            class="absolute inset-0 bg-black/40"
+            @click="showMobileMenu = false"
+          />
+
+          <!-- Sheet -->
+          <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-2xl p-4 space-y-1 sheet-panel">
+            <div v-if="mobileMenuTx">
+              <!-- Handle -->
+              <div class="w-10 h-1 rounded-full bg-surface-200 mx-auto mb-4" />
+
+              <p class="text-sm font-medium text-surface-700 mb-3 px-1 truncate">
+                {{ mobileMenuTx.description || mobileMenuTx.categoryLabel }}
+              </p>
+
+              <button
+                @click="openEdit(mobileMenuTx!); showMobileMenu = false"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-surface-700 hover:bg-surface-50 transition-colors"
+              >
+                <i class="pi pi-pencil text-surface-400" /> Editar
+              </button>
+              <button
+                @click="confirmDelete(mobileMenuTx!); showMobileMenu = false"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <i class="pi pi-trash" /> Excluir
+              </button>
+              <button
+                @click="showMobileMenu = false"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-surface-400 hover:bg-surface-50 transition-colors"
+              >
+                <i class="pi pi-times text-surface-300" /> Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
   </div>
 </template>
@@ -333,8 +347,6 @@ const filters = reactive<{ type?: TransactionType; userId?: string }>({ type: un
 
 // ── Filtro por parceiro — RF28 ────────────────────────────────────────────────
 
-// Constrói as opções de parceiro dinamicamente a partir dos membros do casal.
-// Só aparece se o casal tiver 2 membros (caso contrário não há com quem filtrar).
 const partnerFilter = computed(() => {
   const members = coupleStore.couple?.members ?? []
   if (members.length < 2) return []
@@ -407,7 +419,6 @@ function goPage(n: number) {
 }
 
 onMounted(async () => {
-  // Garante que os membros do casal estão carregados para o filtro de parceiro (RF28)
   if (auth.hasCouple && !coupleStore.couple) {
     await coupleStore.fetchCouple()
   }
@@ -464,7 +475,7 @@ function confirmDelete(tx: TransactionResponse) {
     rejectLabel: 'Cancelar',
     acceptLabel: 'Remover',
     acceptClass: 'p-button-danger',
-    accept: () => { executeDelete(tx) }  // síncrono — ConfirmDialog fecha imediatamente
+    accept: () => { executeDelete(tx) }
   })
 }
 
@@ -480,7 +491,6 @@ function openMobileMenu(tx: TransactionResponse) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Envolve o termo buscado em <mark> para highlight visual */
 function highlightMatch(text: string): string {
   const term = debouncedSearch.value
   if (!term) return escapeHtml(text)
@@ -526,3 +536,28 @@ function categoryIcon(cat: TransactionCategory) {
   return categoryIconMap[cat] ?? 'pi pi-circle'
 }
 </script>
+
+<style scoped>
+/* ── Bottom sheet animation ─────────────────────────────────────────────────── */
+.bottom-sheet-enter-active,
+.bottom-sheet-leave-active {
+  transition: opacity 0.25s ease;
+}
+.bottom-sheet-enter-active .sheet-panel,
+.bottom-sheet-leave-active .sheet-panel {
+  transition: transform 0.25s ease;
+}
+.bottom-sheet-enter-from,
+.bottom-sheet-leave-to {
+  opacity: 0;
+}
+.bottom-sheet-enter-from .sheet-panel,
+.bottom-sheet-leave-to .sheet-panel {
+  transform: translateY(100%);
+}
+
+/* Safe area para dispositivos com notch/home indicator */
+.sheet-panel {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+</style>
