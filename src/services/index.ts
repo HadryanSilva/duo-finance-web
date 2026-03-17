@@ -2,7 +2,7 @@ import api from './api'
 import type {
   TokenResponse, UserInfo,
   CoupleResponse, InviteResponse, JoinCoupleResponse,
-  TransactionResponse, CategoryResponse, Page,
+  TransactionResponse, CategoryResponse, CustomCategoryResponse, Page,
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
   BalanceHistoryResponse, PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
@@ -26,18 +26,15 @@ export const userService = {
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export const authService = {
-  me: () =>
-    api.get<UserInfo>('/users/me').then(r => r.data),
+  me: () => api.get<UserInfo>('/users/me').then(r => r.data),
   refresh: (refreshToken: string) =>
     api.post<TokenResponse>('/auth/refresh', { refreshToken }).then(r => r.data),
-  logout: () =>
-    api.post('/auth/logout'),
+  logout: () => api.post('/auth/logout'),
   register: (firstName: string, lastName: string, email: string, password: string) =>
     api.post<TokenResponse>('/auth/register', { firstName, lastName, email, password }).then(r => r.data),
   login: (email: string, password: string) =>
     api.post<TokenResponse>('/auth/login', { email, password }).then(r => r.data),
-  forgotPassword: (email: string) =>
-    api.post('/auth/forgot-password', { email }),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token: string, newPassword: string) =>
     api.post('/auth/reset-password', { token, newPassword }),
 }
@@ -63,6 +60,7 @@ export const coupleService = {
 
 export interface TransactionFilters {
   category?: string
+  customCategoryId?: string
   type?: TransactionType
   userId?: string
   description?: string
@@ -70,11 +68,12 @@ export interface TransactionFilters {
   endDate?: string
   page?: number
   size?: number
-  sort?: string            // ex: "date,desc" | "amount,asc" | "category,desc"
+  sort?: string
 }
 
 export interface CreateTransactionPayload {
-  category: string
+  category?: string             // null se customCategoryId preenchido
+  customCategoryId?: string     // null se category preenchido
   amount: number
   description?: string
   date: string
@@ -84,7 +83,8 @@ export interface CreateTransactionPayload {
 }
 
 export interface UpdateRecurringPayload {
-  category: TransactionCategory
+  category?: TransactionCategory
+  customCategoryId?: string
   amount: number
   description?: string
   date: string
@@ -112,11 +112,41 @@ export const transactionService = {
     api.delete(`/transactions/${id}/recurring`, { data: payload }),
 }
 
-// ── Categories ────────────────────────────────────────────────────────────────
+// ── Categories (unificado: sistema + customizadas) ────────────────────────────
 
 export const categoryService = {
-  list: (type?: TransactionType) =>
-    api.get<CategoryResponse[]>('/categories', { params: type ? { type } : {} }).then(r => r.data)
+  list: (type?: TransactionType, includeCustom = true) =>
+    api.get<CategoryResponse[]>('/categories', {
+      params: { ...(type ? { type } : {}), includeCustom }
+    }).then(r => r.data)
+}
+
+// ── Custom Categories — RF30/RF31 ─────────────────────────────────────────────
+
+export interface CreateCustomCategoryPayload {
+  name: string
+  type: TransactionType
+  icon?: string
+}
+
+export interface UpdateCustomCategoryPayload {
+  name: string
+  icon?: string
+}
+
+export const customCategoryService = {
+  listAll: () =>
+    api.get<CustomCategoryResponse[]>('/custom-categories').then(r => r.data),
+  listActive: () =>
+    api.get<CustomCategoryResponse[]>('/custom-categories/active').then(r => r.data),
+  create: (payload: CreateCustomCategoryPayload) =>
+    api.post<CustomCategoryResponse>('/custom-categories', payload).then(r => r.data),
+  update: (id: string, payload: UpdateCustomCategoryPayload) =>
+    api.put<CustomCategoryResponse>(`/custom-categories/${id}`, payload).then(r => r.data),
+  toggle: (id: string) =>
+    api.patch<CustomCategoryResponse>(`/custom-categories/${id}/toggle`).then(r => r.data),
+  delete: (id: string) =>
+    api.delete(`/custom-categories/${id}`),
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────
@@ -141,7 +171,7 @@ export const reportService = {
     api.get<PartnerComparisonResponse>('/reports/partner-comparison', { params: period }).then(r => r.data),
 }
 
-// ── Goals — RF35/RF36/RF37 ────────────────────────────────────────────────────
+// ── Goals ─────────────────────────────────────────────────────────────────────
 
 export interface CreateGoalPayload {
   category: string
@@ -153,8 +183,7 @@ export interface UpdateGoalPayload {
 }
 
 export const goalService = {
-  list: () =>
-    api.get<GoalResponse[]>('/goals').then(r => r.data),
+  list: () => api.get<GoalResponse[]>('/goals').then(r => r.data),
   create: (payload: CreateGoalPayload) =>
     api.post<GoalResponse>('/goals', payload).then(r => r.data),
   update: (id: string, payload: UpdateGoalPayload) =>

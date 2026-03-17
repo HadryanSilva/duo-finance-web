@@ -67,8 +67,10 @@ export interface AuthorResponse {
 
 export interface TransactionResponse {
   id: string
-  category: TransactionCategory
-  categoryLabel: string
+  category: TransactionCategory | null       // null se categoria customizada
+  categoryLabel: string                       // sempre preenchido
+  categoryIcon: string                        // ícone resolvido
+  customCategoryId: string | null             // null se categoria do sistema
   type: TransactionType
   amount: number
   description: string | null
@@ -81,10 +83,30 @@ export interface TransactionResponse {
   createdAt: string
 }
 
+/**
+ * Resposta unificada de categoria — cobre sistema (enum) e personalizadas.
+ * custom = false → categoria do sistema; custom = true → personalizada.
+ * name é null para customizadas; id é null para categorias do sistema.
+ */
 export interface CategoryResponse {
-  name: TransactionCategory
+  name: TransactionCategory | null  // null para categorias personalizadas
+  id: string | null                 // null para categorias do sistema
   label: string
   type: TransactionType
+  icon: string
+  custom: boolean
+}
+
+// ── Custom Categories — RF30/RF31 ─────────────────────────────────────────────
+
+export interface CustomCategoryResponse {
+  id: string
+  name: string
+  type: TransactionType
+  icon: string
+  active: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 // ── Paginação ─────────────────────────────────────────────────────────────────
@@ -140,8 +162,6 @@ export interface MonthlyComparisonResponse {
   months: MonthSummary[]
 }
 
-// ── RF38: Balance History ─────────────────────────────────────────────────────
-
 export interface BalanceHistoryResponse {
   months: MonthSummary[]
   totalIncomeInPeriod: number
@@ -150,8 +170,6 @@ export interface BalanceHistoryResponse {
   bestMonthBalance: number
   worstMonthBalance: number
 }
-
-// ── RF39: Partner Comparison ──────────────────────────────────────────────────
 
 export interface PartnerSummary {
   userId: string
@@ -171,7 +189,7 @@ export interface PartnerComparisonResponse {
   partner2: PartnerSummary
 }
 
-// ── Goals — RF35/RF36/RF37 ────────────────────────────────────────────────────
+// ── Goals ─────────────────────────────────────────────────────────────────────
 
 export type AlertLevel = 'NONE' | 'WARNING' | 'EXCEEDED'
 
