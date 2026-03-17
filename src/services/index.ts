@@ -4,7 +4,8 @@ import type {
   CoupleResponse, InviteResponse, JoinCoupleResponse,
   TransactionResponse, CategoryResponse, Page,
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
-  TransactionType, GoalResponse, GoalProgressResponse
+  TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
+  TransactionCategory
 } from '@/types'
 
 // ── User ──────────────────────────────────────────────────────────────────────
@@ -58,10 +59,10 @@ export const coupleService = {
 // ── Transactions ──────────────────────────────────────────────────────────────
 
 export interface TransactionFilters {
-  category?: string            // filtro por categoria — novo
+  category?: string
   type?: TransactionType
   userId?: string
-  description?: string         // RF27 — busca textual por descrição
+  description?: string
   startDate?: string
   endDate?: string
   page?: number
@@ -78,6 +79,18 @@ export interface CreateTransactionPayload {
   recurrenceEndDate?: string
 }
 
+export interface UpdateRecurringPayload {
+  category: TransactionCategory
+  amount: number
+  description?: string
+  date: string
+  scope: RecurringScope
+}
+
+export interface DeleteRecurringPayload {
+  scope: RecurringScope
+}
+
 export const transactionService = {
   list: (filters: TransactionFilters = {}) =>
     api.get<Page<TransactionResponse>>('/transactions', { params: filters }).then(r => r.data),
@@ -87,8 +100,12 @@ export const transactionService = {
     api.post<TransactionResponse>('/transactions', payload).then(r => r.data),
   update: (id: string, payload: Partial<CreateTransactionPayload>) =>
     api.put<TransactionResponse>(`/transactions/${id}`, payload).then(r => r.data),
+  updateRecurring: (id: string, payload: UpdateRecurringPayload) =>
+    api.patch<TransactionResponse>(`/transactions/${id}/recurring`, payload).then(r => r.data),
   delete: (id: string) =>
-    api.delete(`/transactions/${id}`)
+    api.delete(`/transactions/${id}`),
+  deleteRecurring: (id: string, payload: DeleteRecurringPayload) =>
+    api.delete(`/transactions/${id}/recurring`, { data: payload }),
 }
 
 // ── Categories ────────────────────────────────────────────────────────────────
