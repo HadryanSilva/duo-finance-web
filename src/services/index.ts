@@ -54,7 +54,9 @@ export const coupleService = {
   invite: (partnerEmail: string) =>
     api.post<InviteResponse>('/couples/invite', { partnerEmail }).then(r => r.data),
   join: (token: string) =>
-    api.post<JoinCoupleResponse>(`/couples/join/${token}`).then(r => r.data)
+    api.post<JoinCoupleResponse>(`/couples/join/${token}`).then(r => r.data),
+  removeMember: (userId: string) =>
+    api.delete(`/couples/members/${userId}`),
 }
 
 // ── Transactions ──────────────────────────────────────────────────────────────
