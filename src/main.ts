@@ -11,9 +11,8 @@ import router from './router'
 import './assets/main.css'
 
 const app = createApp(App)
-const pinia = createPinia()
 
-app.use(pinia)
+app.use(createPinia())
 app.use(router)
 app.use(PrimeVue, {
   theme: {
@@ -26,10 +25,5 @@ app.use(PrimeVue, {
 })
 app.use(ToastService)
 app.use(ConfirmationService)
-
-// Inicializa o tema antes do mount para evitar flash de tema errado
-import { useThemeStore } from './stores/theme'
-const themeStore = useThemeStore()
-themeStore.isDark // acessa o getter para disparar a inicialização
 
 app.mount('#app')
