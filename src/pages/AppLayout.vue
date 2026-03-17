@@ -1,27 +1,44 @@
 <template>
-  <div class="flex h-screen bg-surface-50 overflow-hidden">
+  <div class="flex h-screen overflow-hidden" :class="themeStore.isDark ? 'bg-surface-950' : 'bg-surface-50'">
 
     <!-- ── OVERLAY (mobile) ─────────────────────────────────────────── -->
     <Transition name="overlay">
-      <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-30 lg:hidden" @click="sidebarOpen = false" />
+      <div
+        v-if="sidebarOpen"
+        class="fixed inset-0 bg-black/40 z-30 lg:hidden"
+        @click="sidebarOpen = false"
+      />
     </Transition>
 
     <!-- ── SIDEBAR ───────────────────────────────────────────────────── -->
     <Transition name="sidebar">
       <aside
         v-show="sidebarOpen || isDesktop"
-        class="fixed lg:relative inset-y-0 left-0 z-40 flex flex-col w-64 bg-white border-r border-surface-200 shrink-0 lg:translate-x-0"
-        style="box-shadow: 1px 0 0 0 #e4e2df"
+        class="fixed lg:relative inset-y-0 left-0 z-40 flex flex-col w-64 shrink-0 lg:translate-x-0 transition-colors duration-200"
+        :class="themeStore.isDark
+          ? 'bg-surface-900 border-r border-surface-800'
+          : 'bg-white border-r border-surface-200'"
+        style="box-shadow: 1px 0 0 0 var(--color-border)"
       >
         <!-- Logo -->
-        <div class="flex items-center justify-between px-6 h-16 border-b border-surface-100">
+        <div
+          class="flex items-center justify-between px-6 h-16 border-b transition-colors duration-200"
+          :class="themeStore.isDark ? 'border-surface-800' : 'border-surface-100'"
+        >
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-surface-900 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-lg bg-surface-900 dark:bg-surface-700 flex items-center justify-center">
               <i class="pi pi-heart text-white text-xs" />
             </div>
-            <span class="font-display text-surface-900 font-semibold text-lg tracking-tight">DuoFinance</span>
+            <span
+              class="font-display font-semibold text-lg tracking-tight transition-colors duration-200"
+              :class="themeStore.isDark ? 'text-surface-100' : 'text-surface-900'"
+            >DuoFinance</span>
           </div>
-          <button class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-50" @click="sidebarOpen = false">
+          <button
+            class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            :class="themeStore.isDark ? 'text-surface-400 hover:bg-surface-800' : 'text-surface-400 hover:bg-surface-50'"
+            @click="sidebarOpen = false"
+          >
             <i class="pi pi-times text-sm" />
           </button>
         </div>
@@ -33,17 +50,36 @@
             :key="item.to"
             :to="item.to"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group"
-            :class="isActive(item.to) ? 'bg-surface-900 text-white' : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'"
+            :class="isActive(item.to)
+              ? 'bg-surface-900 text-white dark:bg-surface-700'
+              : themeStore.isDark
+                ? 'text-surface-400 hover:bg-surface-800 hover:text-surface-100'
+                : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'"
             @click="sidebarOpen = false"
           >
-            <i :class="[item.icon, 'text-base transition-colors', isActive(item.to) ? 'text-white' : 'text-surface-400 group-hover:text-surface-600']" />
+            <i
+              :class="[item.icon, 'text-base transition-colors',
+                isActive(item.to)
+                  ? 'text-white'
+                  : themeStore.isDark
+                    ? 'text-surface-500 group-hover:text-surface-300'
+                    : 'text-surface-400 group-hover:text-surface-600'
+              ]"
+            />
             {{ item.label }}
-            <span v-if="item.to === '/couple' && coupleStore.couple?.waitingForPartner" class="ml-auto w-2 h-2 rounded-full bg-amber-400" />
+            <span
+              v-if="item.to === '/couple' && coupleStore.couple?.waitingForPartner"
+              class="ml-auto w-2 h-2 rounded-full bg-amber-400"
+            />
           </RouterLink>
         </nav>
 
         <!-- Casal info -->
-        <div v-if="coupleStore.couple" class="mx-3 mb-3 px-3 py-3 rounded-xl bg-surface-50 border border-surface-100">
+        <div
+          v-if="coupleStore.couple"
+          class="mx-3 mb-3 px-3 py-3 rounded-xl border transition-colors duration-200"
+          :class="themeStore.isDark ? 'bg-surface-800 border-surface-700' : 'bg-surface-50 border-surface-100'"
+        >
           <div class="flex items-center gap-2 mb-1">
             <i class="pi pi-users text-surface-400 text-xs" />
             <span class="text-xs text-surface-500 font-medium">{{ coupleStore.couple.name }}</span>
@@ -55,7 +91,10 @@
                 <span class="text-surface-600 text-xs font-medium">{{ member.firstName[0] }}</span>
               </div>
             </template>
-            <div v-if="coupleStore.couple.waitingForPartner" class="w-6 h-6 rounded-full border-2 border-white border-dashed border-surface-300 bg-surface-50 flex items-center justify-center">
+            <div
+              v-if="coupleStore.couple.waitingForPartner"
+              class="w-6 h-6 rounded-full border-2 border-white border-dashed border-surface-300 bg-surface-50 flex items-center justify-center"
+            >
               <i class="pi pi-plus text-surface-400" style="font-size: 8px" />
             </div>
           </div>
@@ -74,10 +113,15 @@
               </span>
             </button>
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-surface-800 text-xs truncate">{{ auth.fullName }}</p>
+              <p class="font-medium text-xs truncate transition-colors" :class="themeStore.isDark ? 'text-surface-200' : 'text-surface-800'">{{ auth.fullName }}</p>
               <p class="text-surface-400 text-xs truncate">{{ auth.user?.email }}</p>
             </div>
-            <button @click="handleLogout" class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors shrink-0" title="Sair">
+            <button
+              @click="handleLogout"
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-400 transition-colors shrink-0"
+              :class="themeStore.isDark ? 'hover:bg-surface-700 hover:text-surface-200' : 'hover:bg-surface-100 hover:text-surface-700'"
+              title="Sair"
+            >
               <i class="pi pi-sign-out text-xs" />
             </button>
           </div>
@@ -91,18 +135,41 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
       <!-- Topbar -->
-      <header class="flex items-center justify-between px-4 lg:px-8 h-16 bg-white border-b border-surface-100 shrink-0">
+      <header
+        class="flex items-center justify-between px-4 lg:px-8 h-16 shrink-0 border-b transition-colors duration-200"
+        :class="themeStore.isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-100'"
+      >
         <div class="flex items-center gap-3">
-          <button class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-surface-500 hover:bg-surface-50 transition-colors" @click="sidebarOpen = true">
+          <button
+            class="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-surface-500 transition-colors"
+            :class="themeStore.isDark ? 'hover:bg-surface-800' : 'hover:bg-surface-50'"
+            @click="sidebarOpen = true"
+          >
             <i class="pi pi-bars text-sm" />
           </button>
           <div>
-            <h1 class="font-display text-base lg:text-lg font-semibold text-surface-900 leading-tight">{{ currentTitle }}</h1>
+            <h1
+              class="font-display text-base lg:text-lg font-semibold leading-tight transition-colors"
+              :class="themeStore.isDark ? 'text-surface-100' : 'text-surface-900'"
+            >{{ currentTitle }}</h1>
             <p class="text-surface-400 text-xs hidden sm:block">{{ currentDate }}</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button class="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:bg-surface-50 hover:text-surface-700 transition-colors">
+
+        <div class="flex items-center gap-1">
+          <!-- Toggle dark mode -->
+          <button
+            @click="themeStore.toggle()"
+            class="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 transition-colors"
+            :class="themeStore.isDark ? 'hover:bg-surface-800 hover:text-surface-200' : 'hover:bg-surface-50 hover:text-surface-700'"
+            :title="themeStore.isDark ? 'Modo claro' : 'Modo escuro'"
+          >
+            <i :class="themeStore.isDark ? 'pi pi-sun' : 'pi pi-moon'" class="text-sm" />
+          </button>
+          <button
+            class="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 transition-colors"
+            :class="themeStore.isDark ? 'hover:bg-surface-800 hover:text-surface-200' : 'hover:bg-surface-50 hover:text-surface-700'"
+          >
             <i class="pi pi-bell text-sm" />
           </button>
         </div>
@@ -115,13 +182,18 @@
     </div>
 
     <!-- ── BOTTOM NAV (mobile) ───────────────────────────────────────── -->
-    <nav class="fixed bottom-0 inset-x-0 z-20 lg:hidden bg-white border-t border-surface-200 flex items-center safe-bottom">
+    <nav
+      class="fixed bottom-0 inset-x-0 z-20 lg:hidden flex items-center border-t safe-bottom transition-colors duration-200"
+      :class="themeStore.isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'"
+    >
       <RouterLink
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
         class="relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors"
-        :class="isActive(item.to) ? 'text-surface-900' : 'text-surface-400'"
+        :class="isActive(item.to)
+          ? themeStore.isDark ? 'text-surface-100' : 'text-surface-900'
+          : 'text-surface-400'"
       >
         <i :class="[item.icon, 'text-lg']" />
         <span class="text-[10px]">{{ item.label }}</span>
@@ -137,10 +209,12 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
+import { useThemeStore } from '@/stores/theme'
 import ProfileModal from './ProfileModal.vue'
 
 const auth        = useAuthStore()
 const coupleStore = useCoupleStore()
+const themeStore  = useThemeStore()
 const route       = useRoute()
 const router      = useRouter()
 
@@ -173,7 +247,9 @@ const routeTitles: Record<string, string> = {
 }
 
 const currentTitle = computed(() => routeTitles[route.path] ?? 'DuoFinance')
-const currentDate  = computed(() => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+const currentDate  = computed(() =>
+  new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+)
 
 function isActive(path: string) { return route.path.startsWith(path) }
 
