@@ -1,12 +1,10 @@
 <template>
   <div class="flex h-screen bg-surface-50 overflow-hidden">
 
-    <!-- ── OVERLAY (mobile) ─────────────────────────────────────────── -->
     <Transition name="overlay">
       <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-30 lg:hidden" @click="sidebarOpen = false" />
     </Transition>
 
-    <!-- ── SIDEBAR ───────────────────────────────────────────────────── -->
     <Transition name="sidebar">
       <aside
         v-show="sidebarOpen || isDesktop"
@@ -29,9 +27,7 @@
         <!-- Nav -->
         <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto scrollbar-thin">
           <RouterLink
-            v-for="item in navItems"
-            :key="item.to"
-            :to="item.to"
+            v-for="item in navItems" :key="item.to" :to="item.to"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group"
             :class="isActive(item.to) ? 'bg-surface-900 text-white' : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'"
             @click="sidebarOpen = false"
@@ -65,7 +61,8 @@
         <div class="px-3 pb-4">
           <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl">
             <button @click="showProfile = true" class="relative shrink-0 group" title="Editar perfil">
-              <img v-if="auth.user?.avatarUrl" :src="auth.user.avatarUrl" :alt="auth.fullName" class="w-7 h-7 rounded-full object-cover ring-2 ring-transparent group-hover:ring-surface-300 transition-all" />
+              <img v-if="auth.user?.avatarUrl" :src="auth.user.avatarUrl" :alt="auth.fullName"
+                class="w-7 h-7 rounded-full object-cover ring-2 ring-transparent group-hover:ring-surface-300 transition-all" />
               <div v-else class="w-7 h-7 rounded-full bg-surface-200 flex items-center justify-center ring-2 ring-transparent group-hover:ring-surface-300 transition-all">
                 <span class="text-surface-600 text-xs font-medium">{{ auth.user?.firstName?.[0] }}</span>
               </div>
@@ -87,7 +84,7 @@
 
     <ProfileModal v-model="showProfile" />
 
-    <!-- ── MAIN ──────────────────────────────────────────────────────── -->
+    <!-- MAIN -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
       <!-- Topbar -->
@@ -108,7 +105,6 @@
         </div>
       </header>
 
-      <!-- Content -->
       <main class="flex-1 overflow-y-auto scrollbar-thin pb-16 lg:pb-0">
         <RouterView />
       </main>
@@ -117,18 +113,16 @@
     <!-- ── BOTTOM NAV (mobile) ───────────────────────────────────────── -->
     <nav class="fixed bottom-0 inset-x-0 z-20 lg:hidden bg-white border-t border-surface-200 flex items-center safe-bottom">
       <RouterLink
-        v-for="item in navItems"
-        :key="item.to"
-        :to="item.to"
+        v-for="item in navItems" :key="item.to" :to="item.to"
         class="relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors"
         :class="isActive(item.to) ? 'text-surface-900' : 'text-surface-400'"
       >
         <i :class="[item.icon, 'text-lg']" />
         <span class="text-[10px]">{{ item.label }}</span>
-        <span v-if="item.to === '/couple' && coupleStore.couple?.waitingForPartner" class="absolute top-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
+        <span v-if="item.to === '/couple' && coupleStore.couple?.waitingForPartner"
+          class="absolute top-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
       </RouterLink>
     </nav>
-
   </div>
 </template>
 
@@ -157,11 +151,12 @@ onMounted(() => { checkBreakpoint(); window.addEventListener('resize', checkBrea
 onUnmounted(() => { window.removeEventListener('resize', checkBreakpoint) })
 
 const navItems = [
-  { to: '/dashboard',    label: 'Dashboard',  icon: 'pi pi-chart-line' },
-  { to: '/transactions', label: 'Transações', icon: 'pi pi-list'       },
-  { to: '/goals',        label: 'Metas',      icon: 'pi pi-flag'       },
-  { to: '/reports',      label: 'Relatórios', icon: 'pi pi-chart-bar'  },
-  { to: '/couple',       label: 'Casal',      icon: 'pi pi-users'      }
+  { to: '/dashboard',    label: 'Dashboard',   icon: 'pi pi-chart-line' },
+  { to: '/transactions', label: 'Transações',  icon: 'pi pi-list'       },
+  { to: '/goals',        label: 'Metas',       icon: 'pi pi-flag'       },
+  { to: '/reports',      label: 'Relatórios',  icon: 'pi pi-chart-bar'  },
+  { to: '/categories',   label: 'Categorias',  icon: 'pi pi-tag'        },
+  { to: '/couple',       label: 'Casal',       icon: 'pi pi-users'      }
 ]
 
 const routeTitles: Record<string, string> = {
@@ -169,6 +164,7 @@ const routeTitles: Record<string, string> = {
   '/transactions': 'Transações',
   '/goals':        'Metas',
   '/reports':      'Relatórios',
+  '/categories':   'Categorias',
   '/couple':       'Nosso casal'
 }
 
