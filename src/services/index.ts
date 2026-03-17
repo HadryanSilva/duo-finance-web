@@ -4,7 +4,7 @@ import type {
   CoupleResponse, InviteResponse, JoinCoupleResponse,
   TransactionResponse, CategoryResponse, Page,
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
-  PartnerComparisonResponse,
+  BalanceHistoryResponse, PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
   TransactionCategory
 } from '@/types'
@@ -130,6 +130,8 @@ export const reportService = {
     api.get<ByCategoryResponse>('/reports/by-category', { params: { ...period, type } }).then(r => r.data),
   monthlyComparison: () =>
     api.get<MonthlyComparisonResponse>('/reports/monthly-comparison').then(r => r.data),
+  balanceHistory: () =>
+    api.get<BalanceHistoryResponse>('/reports/balance-history').then(r => r.data),
   exportCsv: (period: ReportPeriod = {}) =>
     api.get<Blob>('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data),
   partnerComparison: (period: ReportPeriod = {}) =>

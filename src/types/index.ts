@@ -140,6 +140,17 @@ export interface MonthlyComparisonResponse {
   months: MonthSummary[]
 }
 
+// ── RF38: Balance History ─────────────────────────────────────────────────────
+
+export interface BalanceHistoryResponse {
+  months: MonthSummary[]
+  totalIncomeInPeriod: number
+  totalExpenseInPeriod: number
+  netBalanceInPeriod: number
+  bestMonthBalance: number
+  worstMonthBalance: number
+}
+
 // ── RF39: Partner Comparison ──────────────────────────────────────────────────
 
 export interface PartnerSummary {
