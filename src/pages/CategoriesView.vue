@@ -301,11 +301,12 @@ function confirmDelete(cat: CustomCategoryResponse) {
 // ── Sugestões de ícone ────────────────────────────────────────────────────────
 
 const iconSuggestions = [
-  'pi pi-tag',        'pi pi-star',       'pi pi-heart',
-  'pi pi-car',        'pi pi-home',       'pi pi-shopping-bag',
-  'pi pi-shopping-cart', 'pi pi-book',    'pi pi-briefcase',
-  'pi pi-gift',       'pi pi-wrench',     'pi pi-code',
-  'pi pi-wallet',      'pi pi-camera',     'pi pi-credit-card',
-  'pi pi-palette',    'pi pi-desktop',    'pi pi-mobile',
+  'pi pi-tag',           'pi pi-star',       'pi pi-heart',
+  'pi pi-car',           'pi pi-home',       'pi pi-shopping-bag',
+  'pi pi-shopping-cart', 'pi pi-book',       'pi pi-briefcase',
+  'pi pi-gift',          'pi pi-wrench',     'pi pi-code',
+  'pi pi-wallet',        'pi pi-camera',     'pi pi-credit-card',
+  'pi pi-palette',       'pi pi-desktop',    'pi pi-mobile',
+  'pi pi-flag',          'pi pi-building',
 ]
 </script>
