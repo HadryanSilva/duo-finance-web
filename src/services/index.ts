@@ -68,6 +68,7 @@ export interface TransactionFilters {
   endDate?: string
   page?: number
   size?: number
+  sort?: string            // ex: "date,desc" | "amount,asc" | "category,desc"
 }
 
 export interface CreateTransactionPayload {
