@@ -42,6 +42,8 @@
 
       <!-- Linha 2: busca + categoria + mês -->
       <div class="flex flex-col sm:flex-row gap-2">
+
+        <!-- Campo de busca -->
         <div class="relative flex-1">
           <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm pointer-events-none" />
           <input
@@ -59,6 +61,7 @@
           </button>
         </div>
 
+        <!-- Filtro por categoria -->
         <div class="relative">
           <select
             v-model="filters.category"
@@ -77,6 +80,7 @@
           <i class="pi pi-chevron-down text-[10px] text-surface-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
+        <!-- Seletor de mês -->
         <select
           v-model="selectedMonth"
           class="w-full sm:w-auto text-sm border border-surface-200 rounded-xl px-3 py-2 bg-white text-surface-700 focus:outline-none focus:border-surface-400"
@@ -85,9 +89,33 @@
         </select>
       </div>
 
+      <!-- Linha 3: ordenação -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs text-surface-400 shrink-0">Ordenar por</span>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <button
+            v-for="opt in sortOptions"
+            :key="opt.field"
+            @click="selectSort(opt.field)"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 border"
+            :class="sortField === opt.field
+              ? 'bg-surface-900 text-white border-surface-900'
+              : 'bg-white border-surface-200 text-surface-600 hover:border-surface-300'"
+          >
+            {{ opt.label }}
+            <i
+              v-if="sortField === opt.field"
+              :class="sortDir === 'desc' ? 'pi pi-arrow-down' : 'pi pi-arrow-up'"
+              class="text-[10px]"
+            />
+          </button>
+        </div>
+      </div>
+
       <!-- Badges filtros ativos -->
       <div v-if="hasActiveFilters" class="flex items-center gap-2 flex-wrap">
         <span class="text-xs text-surface-400">Filtros:</span>
+
         <button
           v-if="filters.category"
           @click="filters.category = undefined; currentPage = 0"
@@ -97,7 +125,11 @@
           {{ categoryLabel(filters.category as TransactionCategory) }}
           <i class="pi pi-times text-[9px] ml-0.5 text-surface-400" />
         </button>
-        <button @click="clearFilters" class="text-xs text-surface-400 hover:text-surface-700 transition-colors underline underline-offset-2">
+
+        <button
+          @click="clearFilters"
+          class="text-xs text-surface-400 hover:text-surface-700 transition-colors underline underline-offset-2"
+        >
           Limpar tudo
         </button>
       </div>
@@ -115,6 +147,8 @@
 
     <!-- Table -->
     <div class="card p-0 overflow-hidden">
+
+      <!-- Skeleton -->
       <template v-if="loading">
         <div class="divide-y divide-surface-50">
           <div v-for="i in 8" :key="i" class="flex items-center gap-4 px-4 lg:px-6 py-4">
@@ -128,14 +162,20 @@
         </div>
       </template>
 
+      <!-- Vazio -->
       <div v-else-if="page.content.length === 0" class="py-20 text-center">
         <i class="pi pi-inbox text-surface-200 text-4xl mb-3 block" />
         <p class="text-surface-400">{{ emptyMessage }}</p>
-        <button v-if="hasActiveFilters" @click="clearFilters" class="mt-3 text-xs text-surface-500 hover:text-surface-800 underline underline-offset-2 transition-colors">
+        <button
+          v-if="hasActiveFilters"
+          @click="clearFilters"
+          class="mt-3 text-xs text-surface-500 hover:text-surface-800 underline underline-offset-2 transition-colors"
+        >
           Limpar filtros
         </button>
       </div>
 
+      <!-- Linhas -->
       <ul v-else class="divide-y divide-surface-50">
         <li
           v-for="tx in page.content"
@@ -169,18 +209,20 @@
               </span>
               <template v-if="tx.recurring || tx.parentTransactionId">
                 <span class="text-surface-200 text-xs">·</span>
-                <i v-if="tx.recurring" class="pi pi-sync text-surface-300 text-[10px]" title="Transação recorrente (pai)" />
+                <i v-if="tx.recurring" class="pi pi-sync text-surface-300 text-[10px]" title="Transação recorrente" />
                 <i v-else-if="tx.parentTransactionId" class="pi pi-replay text-primary-400 text-[10px]" title="Gerado automaticamente por recorrência" />
               </template>
             </div>
           </div>
 
           <div class="flex items-center gap-0.5 shrink-0">
-            <span class="font-mono text-sm font-medium" :class="tx.type === 'INCOME' ? 'text-green-600' : 'text-red-500'">
+            <span
+              class="font-mono text-sm font-medium"
+              :class="tx.type === 'INCOME' ? 'text-green-600' : 'text-red-500'"
+            >
               {{ tx.type === 'INCOME' ? '+' : '−' }} {{ formatCurrency(tx.amount) }}
             </span>
 
-            <!-- Ações desktop -->
             <div class="hidden lg:flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button @click="openEdit(tx)" class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors">
                 <i class="pi pi-pencil text-xs" />
@@ -190,7 +232,6 @@
               </button>
             </div>
 
-            <!-- Menu mobile -->
             <button class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-surface-300" @click="openMobileMenu(tx)">
               <i class="pi pi-ellipsis-v text-xs" />
             </button>
@@ -198,15 +239,24 @@
         </li>
       </ul>
 
+      <!-- Paginação -->
       <div v-if="page.page.totalPages > 1" class="flex items-center justify-between px-4 lg:px-6 py-4 border-t border-surface-100">
         <p class="text-xs text-surface-400">
           {{ page.page.totalElements }} transações · pág. {{ page.page.number + 1 }}/{{ page.page.totalPages }}
         </p>
         <div class="flex items-center gap-1">
-          <button @click="goPage(page.page.number - 1)" :disabled="page.page.number === 0" class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          <button
+            @click="goPage(page.page.number - 1)"
+            :disabled="page.page.number === 0"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
             <i class="pi pi-chevron-left text-xs" />
           </button>
-          <button @click="goPage(page.page.number + 1)" :disabled="page.page.number + 1 >= page.page.totalPages" class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          <button
+            @click="goPage(page.page.number + 1)"
+            :disabled="page.page.number + 1 >= page.page.totalPages"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
             <i class="pi pi-chevron-right text-xs" />
           </button>
         </div>
@@ -238,24 +288,16 @@
       :style="{ width: 'min(420px, 95vw)' }"
       :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }"
     >
-      <p class="text-sm text-surface-500 mb-4 pt-2">
-        Esta é uma transação recorrente. O que você deseja editar?
-      </p>
+      <p class="text-sm text-surface-500 mb-4 pt-2">Esta é uma transação recorrente. O que você deseja editar?</p>
       <div class="space-y-2">
-        <button
-          @click="confirmEditScope('SINGLE')"
-          class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left"
-        >
+        <button @click="confirmEditScope('SINGLE')" class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left">
           <i class="pi pi-calendar text-surface-400 mt-0.5 shrink-0" />
           <div>
             <p class="text-sm font-medium text-surface-800">Só esta ocorrência</p>
             <p class="text-xs text-surface-400 mt-0.5">Apenas este lançamento será alterado</p>
           </div>
         </button>
-        <button
-          @click="confirmEditScope('THIS_AND_FUTURE')"
-          class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left"
-        >
+        <button @click="confirmEditScope('THIS_AND_FUTURE')" class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left">
           <i class="pi pi-calendar-plus text-surface-400 mt-0.5 shrink-0" />
           <div>
             <p class="text-sm font-medium text-surface-800">Esta e as futuras</p>
@@ -273,34 +315,23 @@
       :style="{ width: 'min(420px, 95vw)' }"
       :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }"
     >
-      <p class="text-sm text-surface-500 mb-4 pt-2">
-        Esta é uma transação recorrente. O que você deseja remover?
-      </p>
+      <p class="text-sm text-surface-500 mb-4 pt-2">Esta é uma transação recorrente. O que você deseja remover?</p>
       <div class="space-y-2">
-        <button
-          @click="confirmDeleteScope('SINGLE')"
-          class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left"
-        >
+        <button @click="confirmDeleteScope('SINGLE')" class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left">
           <i class="pi pi-calendar text-surface-400 mt-0.5 shrink-0" />
           <div>
             <p class="text-sm font-medium text-surface-800">Só esta ocorrência</p>
             <p class="text-xs text-surface-400 mt-0.5">Apenas este lançamento será removido</p>
           </div>
         </button>
-        <button
-          @click="confirmDeleteScope('THIS_AND_FUTURE')"
-          class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left"
-        >
+        <button @click="confirmDeleteScope('THIS_AND_FUTURE')" class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-surface-200 hover:border-surface-400 hover:bg-surface-50 transition-colors text-left">
           <i class="pi pi-calendar-minus text-surface-400 mt-0.5 shrink-0" />
           <div>
             <p class="text-sm font-medium text-surface-800">Esta e as futuras</p>
             <p class="text-xs text-surface-400 mt-0.5">Remove este e todos os próximos lançamentos</p>
           </div>
         </button>
-        <button
-          @click="confirmDeleteScope('ALL')"
-          class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors text-left"
-        >
+        <button @click="confirmDeleteScope('ALL')" class="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors text-left">
           <i class="pi pi-trash text-red-400 mt-0.5 shrink-0" />
           <div>
             <p class="text-sm font-medium text-red-600">Toda a série</p>
@@ -417,6 +448,34 @@ function clearFilters() {
   currentPage.value = 0
 }
 
+// ── Ordenação — RF29 ──────────────────────────────────────────────────────────
+
+type SortField = 'date' | 'amount' | 'category'
+type SortDir   = 'asc' | 'desc'
+
+const sortField = ref<SortField>('date')
+const sortDir   = ref<SortDir>('desc')
+
+const sortOptions: { field: SortField; label: string }[] = [
+  { field: 'date',     label: 'Data'      },
+  { field: 'amount',   label: 'Valor'     },
+  { field: 'category', label: 'Categoria' }
+]
+
+// Clicar no campo ativo inverte a direção; clicar em outro campo reseta para desc
+function selectSort(field: SortField) {
+  if (sortField.value === field) {
+    sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    sortField.value = field
+    sortDir.value   = 'desc'
+  }
+  currentPage.value = 0
+}
+
+// Monta o parâmetro sort no formato que o Spring Pageable espera: "field,direction"
+const sortParam = computed(() => `${sortField.value},${sortDir.value}`)
+
 // ── Busca ─────────────────────────────────────────────────────────────────────
 
 const searchInput     = ref('')
@@ -462,7 +521,8 @@ async function loadTransactions() {
       category:    filters.category,
       description: debouncedSearch.value || undefined,
       page:        currentPage.value,
-      size:        15
+      size:        15,
+      sort:        sortParam.value
     })
   } finally {
     loading.value = false
@@ -480,7 +540,7 @@ onMounted(async () => {
   loadTransactions()
   loadCategories()
 })
-watch([selectedMonth, currentPage, debouncedSearch], loadTransactions)
+watch([selectedMonth, currentPage, debouncedSearch, sortParam], loadTransactions)
 watch(filters, loadTransactions, { deep: true })
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
@@ -493,9 +553,8 @@ function openCreate() { editingTx.value = null; showDialog.value = true }
 
 function openEdit(tx: TransactionResponse) {
   editingTx.value = tx
-  // Se for recorrente, pergunta escopo antes de abrir o form
   if (tx.recurring || tx.parentTransactionId) {
-    scopeTargetTx.value    = tx
+    scopeTargetTx.value       = tx
     showEditScopeDialog.value = true
   } else {
     showDialog.value = true
@@ -503,26 +562,16 @@ function openEdit(tx: TransactionResponse) {
 }
 
 async function handleSubmit(payload: CreateTransactionPayload) {
-  if (!editingTx.value) {
-    // Criação simples
-    submitting.value = true
-    try {
+  submitting.value = true
+  try {
+    if (!editingTx.value) {
       await transactionService.create(payload)
       toast.add({ severity: 'success', summary: 'Criado', detail: 'Transação adicionada.', life: 3000 })
       showDialog.value = false
       await loadTransactions()
-    } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'Tente novamente.'
-      toast.add({ severity: 'error', summary: 'Erro', detail, life: 4000 })
-    } finally {
-      submitting.value = false
+      return
     }
-    return
-  }
 
-  // Edição — usa o escopo escolhido
-  submitting.value = true
-  try {
     if (pendingEditScope.value && pendingEditScope.value !== 'SINGLE') {
       const recurringPayload: UpdateRecurringPayload = {
         category:    payload.category as TransactionCategory,
@@ -535,8 +584,9 @@ async function handleSubmit(payload: CreateTransactionPayload) {
     } else {
       await transactionService.update(editingTx.value.id, payload)
     }
+
     toast.add({ severity: 'success', summary: 'Atualizado', detail: 'Transação atualizada.', life: 3000 })
-    showDialog.value   = false
+    showDialog.value       = false
     pendingEditScope.value = null
     await loadTransactions()
   } catch (e: unknown) {
