@@ -4,6 +4,7 @@ import type {
   CoupleResponse, InviteResponse, JoinCoupleResponse,
   TransactionResponse, CategoryResponse, Page,
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
+  PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
   TransactionCategory
 } from '@/types'
@@ -130,7 +131,9 @@ export const reportService = {
   monthlyComparison: () =>
     api.get<MonthlyComparisonResponse>('/reports/monthly-comparison').then(r => r.data),
   exportCsv: (period: ReportPeriod = {}) =>
-    api.get<Blob>('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data)
+    api.get<Blob>('/reports/export/csv', { params: period, responseType: 'blob' }).then(r => r.data),
+  partnerComparison: (period: ReportPeriod = {}) =>
+    api.get<PartnerComparisonResponse>('/reports/partner-comparison', { params: period }).then(r => r.data),
 }
 
 // ── Goals — RF35/RF36/RF37 ────────────────────────────────────────────────────
