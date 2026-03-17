@@ -427,8 +427,8 @@ const partnerChartData = computed(() => {
   return {
     labels: [partner1.firstName, partner2.firstName],
     datasets: [
-      { label: 'Receitas', data: [partner1.totalIncome, partner2.totalIncome], backgroundColor: '#22c55e', borderRadius: 6, borderSkipped: false },
-      { label: 'Despesas', data: [partner1.totalExpense, partner2.totalExpense], backgroundColor: '#fca5a5', borderRadius: 6, borderSkipped: false }
+      { label: 'Receitas', data: [partner1.totalIncome, partner2.totalIncome], backgroundColor: '#22c55e', borderRadius: 6, borderSkipped: false, maxBarThickness: 32 },
+      { label: 'Despesas', data: [partner1.totalExpense, partner2.totalExpense], backgroundColor: '#fca5a5', borderRadius: 6, borderSkipped: false, maxBarThickness: 32 }
     ]
   }
 })
