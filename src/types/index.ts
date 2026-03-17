@@ -50,6 +50,8 @@ export type TransactionType = 'INCOME' | 'EXPENSE'
 
 export type RecurrenceRule = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
 
+export type RecurringScope = 'SINGLE' | 'THIS_AND_FUTURE' | 'ALL'
+
 export type TransactionCategory =
   | 'FOOD' | 'HOUSING' | 'TRANSPORT' | 'HEALTH' | 'EDUCATION'
   | 'LEISURE' | 'CLOTHING' | 'PETS' | 'SUBSCRIPTIONS' | 'SERVICES' | 'SUPERMARKET'
@@ -96,7 +98,7 @@ export interface CategoryResponse {
 //     "size": 15,
 //     "totalElements": 42,
 //     "totalPages": 3,
-//     "number": 0        ← índice base-0
+//     "number": 0
 //   }
 // }
 
