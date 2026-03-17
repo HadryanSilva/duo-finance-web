@@ -4,7 +4,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="font-display text-surface-900 dark:text-surface-100 font-semibold text-lg">Categorias personalizadas</h2>
+        <h2 class="font-display text-surface-900 font-semibold text-lg">Categorias personalizadas</h2>
         <p class="text-surface-400 text-sm mt-0.5">Crie categorias específicas para o seu casal</p>
       </div>
       <Button label="Nova categoria" icon="pi pi-plus" size="small" @click="openCreate" />
@@ -24,7 +24,7 @@
     <!-- Vazio -->
     <div v-else-if="categories.length === 0" class="card py-20 text-center">
       <i class="pi pi-tag text-surface-200 text-4xl mb-3 block" />
-      <p class="text-surface-700 dark:text-surface-300 font-medium mb-1">Nenhuma categoria criada</p>
+      <p class="text-surface-700 font-medium mb-1">Nenhuma categoria criada</p>
       <p class="text-surface-400 text-sm mb-5">Crie categorias personalizadas para organizar melhor os lançamentos do casal.</p>
       <Button label="Criar primeira categoria" icon="pi pi-plus" size="small" @click="openCreate" />
     </div>
@@ -45,7 +45,7 @@
             <!-- Ícone -->
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
-              :class="cat.type === 'EXPENSE' ? 'bg-red-50 dark:bg-red-950/40' : 'bg-green-50 dark:bg-green-950/40'"
+              :class="cat.type === 'EXPENSE' ? 'bg-red-50' : 'bg-green-50'"
             >
               <i
                 :class="[cat.icon, 'text-sm',
@@ -56,10 +56,10 @@
             <!-- Info -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <p class="text-sm font-medium text-surface-800 dark:text-surface-200 truncate">{{ cat.name }}</p>
+                <p class="text-sm font-medium text-surface-800 truncate">{{ cat.name }}</p>
                 <span
                   v-if="!cat.active"
-                  class="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-surface-100 dark:bg-surface-800 text-surface-400 shrink-0"
+                  class="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-surface-100 text-surface-400 shrink-0"
                 >
                   Inativa
                 </span>
@@ -71,21 +71,21 @@
             <div class="flex items-center gap-0.5 shrink-0">
               <button
                 @click="openEdit(cat)"
-                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors"
                 title="Editar"
               >
                 <i class="pi pi-pencil text-xs" />
               </button>
               <button
                 @click="handleToggle(cat)"
-                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors"
                 :title="cat.active ? 'Desativar' : 'Ativar'"
               >
                 <i :class="cat.active ? 'pi pi-pause text-xs' : 'pi pi-play text-xs'" />
               </button>
               <button
                 @click="confirmDelete(cat)"
-                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-500 transition-colors"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                 title="Excluir"
               >
                 <i class="pi pi-trash text-xs" />
@@ -108,20 +108,20 @@
 
         <!-- Nome -->
         <div>
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">Nome</label>
+          <label class="block text-sm font-medium text-surface-700 mb-2">Nome</label>
           <InputText v-model="form.name" class="w-full" placeholder="Ex: Academia, Pet Shop..." maxlength="60" />
         </div>
 
         <!-- Tipo (só na criação) -->
         <div v-if="!editingCat">
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">Tipo</label>
+          <label class="block text-sm font-medium text-surface-700 mb-2">Tipo</label>
           <div class="flex gap-2">
             <button
               @click="form.type = 'EXPENSE'"
               class="flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all"
               :class="form.type === 'EXPENSE'
                 ? 'bg-red-500 text-white border-red-500'
-                : 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:border-surface-300'"
+                : 'bg-white border-surface-200 text-surface-600 hover:border-surface-300'"
             >
               Despesa
             </button>
@@ -130,7 +130,7 @@
               class="flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all"
               :class="form.type === 'INCOME'
                 ? 'bg-green-600 text-white border-green-600'
-                : 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:border-surface-300'"
+                : 'bg-white border-surface-200 text-surface-600 hover:border-surface-300'"
             >
               Receita
             </button>
@@ -139,12 +139,12 @@
 
         <!-- Ícone -->
         <div>
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+          <label class="block text-sm font-medium text-surface-700 mb-2">
             Ícone <span class="text-surface-400 font-normal">(PrimeIcons)</span>
           </label>
           <div class="flex gap-2">
             <InputText v-model="form.icon" class="flex-1" placeholder="pi pi-tag" />
-            <div class="w-10 h-10 rounded-xl border border-surface-200 dark:border-surface-700 flex items-center justify-center shrink-0">
+            <div class="w-10 h-10 rounded-xl border border-surface-200 flex items-center justify-center shrink-0">
               <i :class="[form.icon || 'pi pi-tag', 'text-surface-500 text-sm']" />
             </div>
           </div>
@@ -156,8 +156,8 @@
               @click="form.icon = icon"
               class="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors"
               :class="form.icon === icon
-                ? 'border-surface-900 dark:border-surface-300 bg-surface-900 dark:bg-surface-700 text-white'
-                : 'border-surface-200 dark:border-surface-700 text-surface-500 hover:border-surface-400'"
+                ? 'border-surface-900 bg-surface-900 text-white'
+                : 'border-surface-200 text-surface-500 hover:border-surface-400'"
               :title="icon"
             >
               <i :class="[icon, 'text-xs']" />
