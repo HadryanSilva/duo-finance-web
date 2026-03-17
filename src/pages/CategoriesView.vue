@@ -305,7 +305,7 @@ const iconSuggestions = [
   'pi pi-car',        'pi pi-home',       'pi pi-shopping-bag',
   'pi pi-shopping-cart', 'pi pi-book',    'pi pi-briefcase',
   'pi pi-gift',       'pi pi-wrench',     'pi pi-code',
-  'pi pi-plane',      'pi pi-camera',     'pi pi-music',
+  'pi pi-wallet',      'pi pi-camera',     'pi pi-credit-card',
   'pi pi-palette',    'pi pi-desktop',    'pi pi-mobile',
 ]
 </script>
