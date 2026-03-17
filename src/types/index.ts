@@ -88,19 +88,6 @@ export interface CategoryResponse {
 }
 
 // ── Paginação ─────────────────────────────────────────────────────────────────
-//
-// Com @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO) o Spring
-// serializa Page com metadados aninhados em um objeto "page":
-//
-// {
-//   "content": [...],
-//   "page": {
-//     "size": 15,
-//     "totalElements": 42,
-//     "totalPages": 3,
-//     "number": 0
-//   }
-// }
 
 export interface PageMetadata {
   size: number
@@ -151,6 +138,26 @@ export interface MonthSummary {
 
 export interface MonthlyComparisonResponse {
   months: MonthSummary[]
+}
+
+// ── RF39: Partner Comparison ──────────────────────────────────────────────────
+
+export interface PartnerSummary {
+  userId: string
+  firstName: string
+  lastName: string
+  avatarUrl: string | null
+  totalIncome: number
+  totalExpense: number
+  balance: number
+  topExpenseCategories: CategoryBreakdown[]
+}
+
+export interface PartnerComparisonResponse {
+  startDate: string
+  endDate: string
+  partner1: PartnerSummary
+  partner2: PartnerSummary
 }
 
 // ── Goals — RF35/RF36/RF37 ────────────────────────────────────────────────────
