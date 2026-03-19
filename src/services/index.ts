@@ -6,8 +6,8 @@ import type {
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
   BalanceHistoryResponse, PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
-  TransactionCategory, BudgetOverviewResponse, BudgetComparisonResponse,
-  DistributeResponse, DistributionRule, CustomDistributeResponse
+  BudgetOverviewResponse, BudgetComparisonResponse, BudgetAllocationResponse,
+  TransactionCategory
 } from '@/types'
 
 import type {
@@ -201,25 +201,43 @@ export const goalService = {
     api.get<GoalProgressResponse[]>('/goals/progress').then(r => r.data),
 }
 
+export interface CategoryAllocationPayload {
+  category: TransactionCategory
+  percentage: number
+}
+
 export const budgetService = {
+  /** Visão consolidada do orçamento do mês */
   overview: (year?: number, month?: number) =>
     api.get<BudgetOverviewResponse>('/budget/overview', {
       params: { ...(year ? { year } : {}), ...(month ? { month } : {}) }
     }).then(r => r.data),
 
-  setGlobalLimit: (monthlyLimit: number) =>
-    api.put('/budget/global-limit', { monthlyLimit }),
+  /** Lista alocações atuais com valores calculados */
+  listAllocations: () =>
+    api.get<BudgetAllocationResponse[]>('/budget/allocations').then(r => r.data),
 
-  removeGlobalLimit: () =>
-    api.delete('/budget/global-limit'),
+  /** Define ou atualiza a renda mensal do casal */
+  setIncome: (monthlyIncome: number) =>
+    api.put('/budget/income', { monthlyIncome }),
 
-  distribute: (rule: DistributionRule) =>
-    api.post<DistributeResponse>('/budget/distribute', { rule }).then(r => r.data),
+  /** Remove a renda mensal */
+  removeIncome: () =>
+    api.delete('/budget/income'),
 
-  /** Distribuição customizada: envia lista de { category, percentage } com soma = 100 */
-  distributeCustom: (allocations: { category: string; percentage: number }[]) =>
-    api.post<CustomDistributeResponse>('/budget/distribute/custom', { allocations }).then(r => r.data),
+  /** Salva alocações do orçamento (cria ou atualiza por categoria) */
+  saveBudget: (allocations: CategoryAllocationPayload[]) =>
+    api.put<BudgetAllocationResponse[]>('/budget', { allocations }).then(r => r.data),
 
+  /** Remove uma categoria do orçamento */
+  deleteCategory: (category: TransactionCategory) =>
+    api.delete(`/budget/category/${category}`),
+
+  /** Limpa todo o orçamento */
+  clearAll: () =>
+    api.delete('/budget'),
+
+  /** Comparação orçado vs realizado por N meses */
   comparison: (months = 6) =>
     api.get<BudgetComparisonResponse>('/budget/comparison', { params: { months } }).then(r => r.data),
 }
