@@ -255,3 +255,29 @@ export interface BudgetComparisonResponse {
   monthlyIncome: number | null
   months: MonthComparison[]
 }
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+export type NotificationType =
+  | 'GOAL_WARNING'
+  | 'GOAL_EXCEEDED'
+  | 'BUDGET_EXCEEDED'
+  | 'PARTNER_JOINED'
+
+export interface NotificationResponse {
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  read: boolean
+  createdAt: string
+}
+
+export interface NotificationListResponse {
+  notifications: NotificationResponse[]
+  unreadCount: number
+}
+
+export interface NotificationSettingsResponse {
+  enabled: boolean
+}

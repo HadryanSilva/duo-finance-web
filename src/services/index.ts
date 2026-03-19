@@ -7,7 +7,7 @@ import type {
   BalanceHistoryResponse, PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
   BudgetOverviewResponse, BudgetComparisonResponse, BudgetAllocationResponse,
-  TransactionCategory
+  TransactionCategory, NotificationListResponse, NotificationSettingsResponse
 } from '@/types'
 
 import type {
@@ -240,4 +240,21 @@ export const budgetService = {
   /** Comparação orçado vs realizado por N meses */
   comparison: (months = 6) =>
     api.get<BudgetComparisonResponse>('/budget/comparison', { params: { months } }).then(r => r.data),
+}
+
+export const notificationService = {
+  list: () =>
+    api.get<NotificationListResponse>('/notifications').then(r => r.data),
+
+  markAsRead: (id: string) =>
+    api.patch(`/notifications/${id}/read`),
+
+  markAllAsRead: () =>
+    api.patch('/notifications/read-all'),
+
+  getSettings: () =>
+    api.get<NotificationSettingsResponse>('/notifications/settings').then(r => r.data),
+
+  toggleSettings: () =>
+    api.patch<NotificationSettingsResponse>('/notifications/settings/toggle').then(r => r.data),
 }
