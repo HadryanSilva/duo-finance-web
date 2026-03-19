@@ -263,3 +263,8 @@ export interface DistributeResponse {
   globalLimit: number
   allocations: CategoryAllocation[]
 }
+
+export interface CustomDistributeResponse {
+  globalLimit: number
+  allocations: CategoryAllocation[]
+}
