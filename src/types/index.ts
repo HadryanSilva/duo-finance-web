@@ -90,8 +90,6 @@ export interface CategoryResponse {
   custom: boolean
 }
 
-// ── Custom Categories ─────────────────────────────────────────────────────────
-
 export interface CustomCategoryResponse {
   id: string
   name: string
@@ -210,37 +208,43 @@ export interface GoalProgressResponse {
 
 // ── Budget ────────────────────────────────────────────────────────────────────
 
-export type DistributionRule = 'RULE_50_30_20' | 'PROPORTIONAL_HISTORICAL' | 'EQUAL'
+export type BudgetStatus = 'OK' | 'WARNING' | 'EXCEEDED'
 
 export interface CategoryBudgetItem {
   category: TransactionCategory
   categoryLabel: string
-  budgeted: number
-  spent: number
-  remaining: number
-  percentage: number
-  percentageOfTotal: number
-  alertLevel: AlertLevel
+  percentage: number       // % da renda alocado
+  allocated: number        // valor em R$ = income * percentage / 100
+  spent: number            // gasto real no mês
+  remaining: number        // allocated - spent
+  usagePercentage: number  // spent / allocated * 100
+  status: BudgetStatus
 }
 
 export interface BudgetOverviewResponse {
+  monthlyIncome: number | null
+  totalAllocated: number
+  totalAllocatedPct: number
+  totalSpent: number
+  totalRemaining: number
   year: number
   month: number
   monthLabel: string
-  globalLimit: number | null
-  totalBudgeted: number
-  totalSpent: number
-  totalRemaining: number
-  globalPercentage: number
-  globalAlert: AlertLevel
   categories: CategoryBudgetItem[]
+}
+
+export interface BudgetAllocationResponse {
+  category: TransactionCategory
+  categoryLabel: string
+  percentage: number
+  allocated: number
 }
 
 export interface MonthComparison {
   year: number
   month: number
   monthLabel: string
-  totalBudgeted: number
+  totalAllocated: number
   totalSpent: number
   balance: number
   adherencePercentage: number
@@ -248,23 +252,6 @@ export interface MonthComparison {
 }
 
 export interface BudgetComparisonResponse {
+  monthlyIncome: number | null
   months: MonthComparison[]
-}
-
-export interface CategoryAllocation {
-  category: TransactionCategory
-  categoryLabel: string
-  allocated: number
-  percentage: number
-}
-
-export interface DistributeResponse {
-  rule: DistributionRule
-  globalLimit: number
-  allocations: CategoryAllocation[]
-}
-
-export interface CustomDistributeResponse {
-  globalLimit: number
-  allocations: CategoryAllocation[]
 }
