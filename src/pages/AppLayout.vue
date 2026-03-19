@@ -108,9 +108,8 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button class="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:bg-surface-50 hover:text-surface-700 transition-colors">
-            <i class="pi pi-bell text-sm" />
-          </button>
+          <!-- Substituir o botão estático pelo componente: -->
+          <NotificationDropdown />
         </div>
       </header>
 
@@ -145,6 +144,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
 import ProfileModal from './ProfileModal.vue'
+import NotificationDropdown from '../components/NotificationDropdown.vue'
 
 const auth        = useAuthStore()
 const coupleStore = useCoupleStore()
