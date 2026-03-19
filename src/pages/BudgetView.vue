@@ -12,9 +12,7 @@
           <button @click="prevMonth" class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 transition-colors">
             <i class="pi pi-chevron-left text-xs" />
           </button>
-          <span class="text-sm font-medium text-surface-700 px-1 min-w-[90px] text-center capitalize">
-            {{ monthLabel }}
-          </span>
+          <span class="text-sm font-medium text-surface-700 px-1 min-w-[90px] text-center capitalize">{{ monthLabel }}</span>
           <button @click="nextMonth" :disabled="isCurrentMonth" class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
             <i class="pi pi-chevron-right text-xs" />
           </button>
@@ -51,9 +49,7 @@
           <div v-if="data.globalLimit" class="space-y-3">
             <div class="flex items-end justify-between">
               <div>
-                <p class="text-2xl font-mono font-semibold" :class="alertColor(data.globalAlert)">
-                  {{ formatCurrency(data.totalSpent) }}
-                </p>
+                <p class="text-2xl font-mono font-semibold" :class="alertColor(data.globalAlert)">{{ formatCurrency(data.totalSpent) }}</p>
                 <p class="text-xs text-surface-400 mt-0.5">de {{ formatCurrency(data.globalLimit) }} · {{ data.globalPercentage.toFixed(1) }}% utilizado</p>
               </div>
               <div class="text-right">
@@ -81,9 +77,7 @@
             <p class="text-surface-400 text-xs mt-0.5">Distribui o limite global entre as categorias</p>
           </div>
         </div>
-
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <!-- Estratégias automáticas -->
           <button v-for="rule in distributionRules" :key="rule.value"
             @click="applyDistribution(rule.value)"
             :disabled="!data?.globalLimit || distributing"
@@ -91,11 +85,7 @@
             <span class="text-sm font-medium text-surface-800">{{ rule.label }}</span>
             <span class="text-xs text-surface-400">{{ rule.description }}</span>
           </button>
-
-          <!-- Distribuição customizada -->
-          <button
-            @click="openCustomDistribute"
-            :disabled="!data?.globalLimit || !data?.categories.length"
+          <button @click="openCustomDistribute" :disabled="!data?.globalLimit"
             class="flex flex-col items-start gap-1 p-3 rounded-xl border-2 border-dashed border-surface-300 hover:border-surface-900 hover:bg-surface-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left">
             <span class="text-sm font-semibold text-surface-900 flex items-center gap-1.5">
               <i class="pi pi-sliders-h text-xs" />
@@ -111,7 +101,6 @@
         <div class="px-4 lg:px-6 py-4 border-b border-surface-50">
           <h3 class="font-display font-semibold text-surface-900">Por categoria</h3>
         </div>
-
         <div v-if="loading" class="divide-y divide-surface-50">
           <div v-for="i in 4" :key="i" class="flex items-center gap-4 px-4 lg:px-6 py-4">
             <div class="h-3.5 bg-surface-100 rounded animate-pulse w-1/4" />
@@ -119,13 +108,10 @@
             <div class="h-3.5 bg-surface-100 rounded animate-pulse w-20" />
           </div>
         </div>
-
         <div v-else-if="!data?.categories.length" class="py-12 text-center">
           <i class="pi pi-flag text-surface-200 text-3xl mb-2 block" />
-          <p class="text-surface-400 text-sm">Nenhuma meta ativa. Crie metas por categoria para usar o orçamento.</p>
-          <RouterLink to="/goals" class="mt-3 inline-block text-xs text-surface-500 hover:text-surface-800 underline underline-offset-2">Ir para metas</RouterLink>
+          <p class="text-surface-400 text-sm">Nenhuma meta ativa. Use a distribuição personalizada para criar metas.</p>
         </div>
-
         <div v-else class="divide-y divide-surface-50">
           <div v-for="cat in data!.categories" :key="cat.category" class="px-4 lg:px-6 py-4">
             <div class="flex items-center justify-between mb-2">
@@ -166,7 +152,6 @@
             <option :value="12">12 meses</option>
           </select>
         </div>
-
         <div v-if="loadingComparison" class="divide-y divide-surface-50">
           <div v-for="i in 6" :key="i" class="flex items-center gap-4 px-4 lg:px-6 py-3.5">
             <div class="h-3.5 bg-surface-100 rounded animate-pulse w-16" />
@@ -174,7 +159,6 @@
             <div class="h-3.5 bg-surface-100 rounded animate-pulse w-24" />
           </div>
         </div>
-
         <table v-else-if="comparison" class="w-full text-sm">
           <thead>
             <tr class="border-b border-surface-100">
@@ -189,22 +173,18 @@
             <tr v-for="m in [...comparison.months].reverse()" :key="`${m.year}-${m.month}`" class="hover:bg-surface-50/60 transition-colors">
               <td class="px-4 lg:px-6 py-3.5 font-medium text-surface-800">{{ m.monthLabel }}</td>
               <td class="px-4 lg:px-6 py-3.5 text-right font-mono text-surface-600 hidden sm:table-cell">{{ formatCurrency(m.totalBudgeted) }}</td>
-              <td class="px-4 lg:px-6 py-3.5 text-right font-mono hidden sm:table-cell" :class="m.withinBudget ? 'text-surface-700' : 'text-red-500 font-medium'">
-                {{ formatCurrency(m.totalSpent) }}
-              </td>
+              <td class="px-4 lg:px-6 py-3.5 text-right font-mono hidden sm:table-cell" :class="m.withinBudget ? 'text-surface-700' : 'text-red-500 font-medium'">{{ formatCurrency(m.totalSpent) }}</td>
               <td class="px-4 lg:px-6 py-3.5 text-right">
                 <div class="flex items-center justify-end gap-2">
                   <div class="w-16 bg-surface-100 rounded-full h-1.5 overflow-hidden hidden sm:block">
-                    <div class="h-1.5 rounded-full transition-all"
-                      :class="m.adherencePercentage > 100 ? 'bg-red-400' : m.adherencePercentage > 80 ? 'bg-amber-400' : 'bg-green-500'"
+                    <div class="h-1.5 rounded-full" :class="m.adherencePercentage > 100 ? 'bg-red-400' : m.adherencePercentage > 80 ? 'bg-amber-400' : 'bg-green-500'"
                       :style="{ width: `${Math.min(m.adherencePercentage, 100)}%` }" />
                   </div>
                   <span class="text-xs font-medium text-surface-700">{{ m.adherencePercentage.toFixed(0) }}%</span>
                 </div>
               </td>
               <td class="px-4 lg:px-6 py-3.5 text-center">
-                <span class="text-xs font-medium px-2 py-0.5 rounded-full"
-                  :class="m.withinBudget ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="m.withinBudget ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
                   {{ m.withinBudget ? '✓ Ok' : '✗ Estourou' }}
                 </span>
               </td>
@@ -231,7 +211,7 @@
       </div>
     </Dialog>
 
-    <!-- ── DIALOG: Confirmar remoção ─────────────────────────────────────── -->
+    <!-- ── DIALOG: Remover limite ────────────────────────────────────────── -->
     <Dialog v-model:visible="showRemoveGlobal" header="Remover limite global" :modal="true"
       :style="{ width: 'min(380px, 95vw)' }"
       :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }">
@@ -246,68 +226,80 @@
 
     <!-- ── DIALOG: Distribuição customizada ─────────────────────────────── -->
     <Dialog v-model:visible="showCustomDialog" header="Distribuição personalizada" :modal="true"
-      :style="{ width: 'min(520px, 95vw)' }"
+      :style="{ width: 'min(540px, 95vw)' }"
       :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }">
       <div class="space-y-4 pt-4" v-if="data?.globalLimit">
 
-        <!-- Cabeçalho com total -->
-        <div class="flex items-center justify-between p-3 rounded-xl"
-          :class="Math.abs(totalCustomPct - 100) < 0.01 ? 'bg-green-50' : totalCustomPct > 100 ? 'bg-red-50' : 'bg-surface-50'">
+        <!-- Totalizador -->
+        <div class="flex items-center justify-between p-3 rounded-xl transition-colors"
+          :class="isTotal100 ? 'bg-green-50' : totalCustomPct > 100 ? 'bg-red-50' : 'bg-surface-50'">
           <div>
-            <p class="text-sm font-medium" :class="Math.abs(totalCustomPct - 100) < 0.01 ? 'text-green-700' : totalCustomPct > 100 ? 'text-red-600' : 'text-surface-700'">
+            <p class="text-sm font-medium" :class="isTotal100 ? 'text-green-700' : totalCustomPct > 100 ? 'text-red-600' : 'text-surface-700'">
               Total: {{ totalCustomPct.toFixed(1) }}%
             </p>
             <p class="text-xs text-surface-400 mt-0.5">
-              {{ Math.abs(totalCustomPct - 100) < 0.01 ? 'Pronto para aplicar' : totalCustomPct > 100 ? `Excedendo em ${(totalCustomPct - 100).toFixed(1)}%` : `Faltam ${(100 - totalCustomPct).toFixed(1)}%` }}
+              <span v-if="isTotal100">Pronto para aplicar</span>
+              <span v-else-if="totalCustomPct > 100">Excedendo em {{ (totalCustomPct - 100).toFixed(1) }}%</span>
+              <span v-else>Faltam {{ (100 - totalCustomPct).toFixed(1) }}%</span>
             </p>
           </div>
-          <button @click="distributeRemaining" v-if="totalCustomPct < 100 && customAllocations.some(a => a.locked)"
+          <button v-if="!isTotal100 && totalCustomPct < 100 && hasLockedItems"
+            @click="distributeRemaining"
             class="text-xs text-surface-600 hover:text-surface-900 underline underline-offset-2 transition-colors">
             Distribuir restante
           </button>
         </div>
 
+        <!-- Busca de categoria -->
+        <div class="relative">
+          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 text-sm pointer-events-none" />
+          <input v-model="categorySearch" type="text" placeholder="Buscar categoria..."
+            class="w-full pl-9 pr-3 py-2 text-sm border border-surface-200 rounded-xl bg-white focus:outline-none focus:border-surface-400 transition-colors" />
+        </div>
+
         <!-- Lista de categorias -->
-        <div class="space-y-2 max-h-72 overflow-y-auto scrollbar-thin pr-1">
-          <div v-for="alloc in customAllocations" :key="alloc.category"
-            class="flex items-center gap-3 p-3 rounded-xl border transition-colors"
-            :class="alloc.locked ? 'border-surface-900 bg-surface-50' : 'border-surface-200'">
+        <div class="space-y-1.5 max-h-80 overflow-y-auto scrollbar-thin pr-1">
 
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-surface-800">{{ alloc.label }}</p>
-              <p class="text-xs text-surface-400 mt-0.5">
-                {{ formatCurrency((data!.globalLimit! * alloc.percentage) / 100) }}
-              </p>
-            </div>
+          <!-- Categorias com percentual > 0 aparecem primeiro -->
+          <template v-for="alloc in filteredAllocations" :key="alloc.category">
+            <div class="flex items-center gap-3 p-3 rounded-xl border transition-colors"
+              :class="alloc.locked ? 'border-surface-900 bg-surface-50' : 'border-surface-200 hover:border-surface-300'">
 
-            <!-- Input de percentual -->
-            <div class="flex items-center gap-2 shrink-0">
-              <input
-                v-model.number="alloc.percentage"
-                type="number" min="0" max="100" step="0.5"
-                class="w-20 text-right text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:border-surface-400 transition-colors"
-                :class="alloc.locked ? 'border-surface-900 bg-white font-medium' : 'border-surface-200'"
-                @input="alloc.locked = true"
-              />
-              <span class="text-sm text-surface-400">%</span>
-              <button @click="toggleLock(alloc)" class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                :class="alloc.locked ? 'bg-surface-900 text-white' : 'bg-surface-100 text-surface-400 hover:bg-surface-200'">
-                <i :class="alloc.locked ? 'pi pi-lock text-[10px]' : 'pi pi-lock-open text-[10px]'" />
-              </button>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-surface-800">{{ alloc.label }}</p>
+                <p class="text-xs mt-0.5" :class="alloc.percentage > 0 ? 'text-surface-500' : 'text-surface-300'">
+                  {{ alloc.percentage > 0 ? formatCurrency((data!.globalLimit! * alloc.percentage) / 100) : 'Sem alocação' }}
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <input v-model.number="alloc.percentage"
+                  type="number" min="0" max="100" step="0.5"
+                  class="w-20 text-right text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:border-surface-400 transition-colors"
+                  :class="alloc.locked ? 'border-surface-900 font-medium bg-white' : 'border-surface-200'"
+                  @input="alloc.locked = Number(alloc.percentage) > 0" />
+                <span class="text-sm text-surface-400 w-4">%</span>
+                <button @click="toggleLock(alloc)"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  :class="alloc.locked ? 'bg-surface-900 text-white' : 'bg-surface-100 text-surface-400 hover:bg-surface-200'">
+                  <i :class="alloc.locked ? 'pi pi-lock text-[10px]' : 'pi pi-lock-open text-[10px]'" />
+                </button>
+              </div>
             </div>
-          </div>
+          </template>
+
+          <p v-if="filteredAllocations.length === 0" class="text-sm text-surface-400 text-center py-4">
+            Nenhuma categoria encontrada
+          </p>
         </div>
 
         <p class="text-xs text-surface-400">
-          Clique no cadeado para fixar uma categoria. Use "Distribuir restante" para preencher automaticamente as demais.
+          Categorias com percentual maior que zero terão suas metas criadas ou atualizadas automaticamente.
         </p>
 
         <div class="flex gap-2 pt-1">
           <Button label="Cancelar" severity="secondary" class="flex-1" @click="showCustomDialog = false" />
-          <Button label="Aplicar" class="flex-1"
-            :loading="distributing"
-            :disabled="Math.abs(totalCustomPct - 100) >= 0.01"
-            @click="applyCustomDistribution" />
+          <Button label="Aplicar" class="flex-1" :loading="distributing" :disabled="!isTotal100" @click="applyCustomDistribution" />
         </div>
       </div>
     </Dialog>
@@ -317,12 +309,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { RouterLink } from 'vue-router'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { useToast } from 'primevue/usetoast'
-import { budgetService } from '@/services'
+import { budgetService, categoryService } from '@/services'
 import type { BudgetOverviewResponse, BudgetComparisonResponse, AlertLevel, DistributionRule } from '@/types'
 
 const toast = useToast()
@@ -401,9 +392,8 @@ async function saveGlobalLimit() {
     toast.add({ severity: 'success', summary: 'Limite definido', life: 3000 })
     showGlobalDialog.value = false
     await loadOverview()
-  } catch {
-    toast.add({ severity: 'error', summary: 'Erro ao salvar limite', life: 3000 })
-  } finally { savingGlobal.value = false }
+  } catch { toast.add({ severity: 'error', summary: 'Erro ao salvar limite', life: 3000 }) }
+  finally { savingGlobal.value = false }
 }
 
 async function removeGlobalLimit() {
@@ -413,9 +403,8 @@ async function removeGlobalLimit() {
     toast.add({ severity: 'success', summary: 'Limite removido', life: 3000 })
     showRemoveGlobal.value = false
     await loadOverview()
-  } catch {
-    toast.add({ severity: 'error', summary: 'Erro ao remover limite', life: 3000 })
-  } finally { savingGlobal.value = false }
+  } catch { toast.add({ severity: 'error', summary: 'Erro ao remover limite', life: 3000 }) }
+  finally { savingGlobal.value = false }
 }
 
 // ── Distribuição automática ───────────────────────────────────────────────────
@@ -446,43 +435,68 @@ interface CustomAlloc { category: string; label: string; percentage: number; loc
 
 const showCustomDialog  = ref(false)
 const customAllocations = ref<CustomAlloc[]>([])
+const categorySearch    = ref('')
 
 const totalCustomPct = computed(() =>
-  customAllocations.value.reduce((sum, a) => sum + (a.percentage || 0), 0)
+  customAllocations.value.reduce((sum, a) => sum + (Number(a.percentage) || 0), 0)
 )
+const isTotal100 = computed(() => Math.abs(totalCustomPct.value - 100) < 0.01)
+const hasLockedItems = computed(() => customAllocations.value.some(a => a.locked))
 
-function openCustomDistribute() {
-  if (!data.value?.categories.length) return
+const filteredAllocations = computed(() => {
+  const q = categorySearch.value.toLowerCase()
+  const list = q
+    ? customAllocations.value.filter(a => a.label.toLowerCase().includes(q))
+    : customAllocations.value
+  // Categorias alocadas primeiro, depois as sem alocação
+  return [...list].sort((a, b) => {
+    if (a.percentage > 0 && b.percentage === 0) return -1
+    if (a.percentage === 0 && b.percentage > 0) return 1
+    return a.label.localeCompare(b.label)
+  })
+})
 
-  // Inicializa com os percentuais atuais em relação ao globalLimit
-  const globalLimit = data.value.globalLimit ?? data.value.totalBudgeted
-  customAllocations.value = data.value.categories.map(cat => ({
-    category:   cat.category,
-    label:      cat.categoryLabel,
-    percentage: globalLimit > 0
-      ? Math.round((cat.budgeted / globalLimit) * 1000) / 10  // 1 casa decimal
-      : 0,
-    locked: false
-  }))
+async function openCustomDistribute() {
+  if (!data.value?.globalLimit) return
 
-  showCustomDialog.value = true
+  // Carrega TODAS as categorias de despesa (sistema + customizadas)
+  const allCategories = await categoryService.list('EXPENSE')
+  const globalLimit   = data.value.globalLimit
+
+  // Mapa das metas já existentes com seus limites atuais
+  const existingMap = Object.fromEntries(
+    (data.value.categories ?? []).map(c => [c.category, c.budgeted])
+  )
+
+  customAllocations.value = allCategories.map(cat => {
+    const key        = cat.name ?? cat.id ?? ''
+    const budgeted   = existingMap[key as keyof typeof existingMap] ?? 0
+    const percentage = globalLimit > 0 && budgeted > 0
+      ? Math.round((budgeted / globalLimit) * 1000) / 10
+      : 0
+    return {
+      category:   key,
+      label:      cat.label,
+      percentage,
+      locked:     percentage > 0
+    }
+  })
+
+  categorySearch.value    = ''
+  showCustomDialog.value  = true
 }
 
 function toggleLock(alloc: CustomAlloc) {
   alloc.locked = !alloc.locked
 }
 
-/** Distribui o percentual restante igualmente entre as categorias não fixadas */
 function distributeRemaining() {
-  const unlocked = customAllocations.value.filter(a => !a.locked)
+  const unlocked    = customAllocations.value.filter(a => !a.locked)
   if (!unlocked.length) return
-
-  const lockedTotal = customAllocations.value.filter(a => a.locked).reduce((s, a) => s + a.percentage, 0)
+  const lockedTotal = customAllocations.value.filter(a => a.locked).reduce((s, a) => s + (Number(a.percentage) || 0), 0)
   const remaining   = Math.max(0, 100 - lockedTotal)
   const perCategory = Math.round((remaining / unlocked.length) * 10) / 10
-
   unlocked.forEach((a, i) => {
-    // Última categoria absorve diferença de arredondamento
     if (i === unlocked.length - 1) {
       const usedByOthers = perCategory * (unlocked.length - 1)
       a.percentage = Math.round((remaining - usedByOthers) * 10) / 10
@@ -493,12 +507,12 @@ function distributeRemaining() {
 }
 
 async function applyCustomDistribution() {
-  if (Math.abs(totalCustomPct.value - 100) >= 0.01) return
+  if (!isTotal100.value) return
   distributing.value = true
   try {
     const allocations = customAllocations.value
-      .filter(a => a.percentage > 0)
-      .map(a => ({ category: a.category, percentage: a.percentage }))
+      .filter(a => Number(a.percentage) > 0)
+      .map(a => ({ category: a.category, percentage: Number(a.percentage) }))
 
     const result = await budgetService.distributeCustom(allocations)
     toast.add({ severity: 'success', summary: 'Orçamento atualizado', detail: `${result.allocations.length} categorias atualizadas`, life: 4000 })
