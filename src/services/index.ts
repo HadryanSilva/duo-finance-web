@@ -6,7 +6,12 @@ import type {
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
   BalanceHistoryResponse, PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
-  TransactionCategory
+  TransactionCategory, BudgetOverviewResponse, BudgetComparisonResponse,
+  DistributeResponse, DistributionRule
+} from '@/types'
+
+import type {
+
 } from '@/types'
 
 // ── User ──────────────────────────────────────────────────────────────────────
@@ -194,4 +199,28 @@ export const goalService = {
     api.delete(`/goals/${id}`),
   progress: () =>
     api.get<GoalProgressResponse[]>('/goals/progress').then(r => r.data),
+}
+
+export const budgetService = {
+  /** Visão consolidada do orçamento do mês */
+  overview: (year?: number, month?: number) =>
+    api.get<BudgetOverviewResponse>('/budget/overview', {
+      params: { ...(year ? { year } : {}), ...(month ? { month } : {}) }
+    }).then(r => r.data),
+
+  /** Define o limite global mensal do casal */
+  setGlobalLimit: (monthlyLimit: number) =>
+    api.put('/budget/global-limit', { monthlyLimit }),
+
+  /** Remove o limite global */
+  removeGlobalLimit: () =>
+    api.delete('/budget/global-limit'),
+
+  /** Distribui automaticamente o limite entre as metas */
+  distribute: (rule: DistributionRule) =>
+    api.post<DistributeResponse>('/budget/distribute', { rule }).then(r => r.data),
+
+  /** Comparação orçado vs realizado por N meses */
+  comparison: (months = 6) =>
+    api.get<BudgetComparisonResponse>('/budget/comparison', { params: { months } }).then(r => r.data),
 }
