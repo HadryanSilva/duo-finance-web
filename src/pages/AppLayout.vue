@@ -27,14 +27,20 @@
         <!-- Nav -->
         <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto scrollbar-thin">
           <RouterLink
-            v-for="item in navItems" :key="item.to" :to="item.to"
+            v-for="item in navItems"
+            :key="item.to"
+            :to="item.to"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group"
-            :class="isActive(item.to) ? 'bg-surface-900 text-white' : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'"
+            :class="isActive(item.to)
+              ? 'bg-surface-900 text-white'
+              : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'"
             @click="sidebarOpen = false"
           >
-            <i :class="[item.icon, 'text-base transition-colors', isActive(item.to) ? 'text-white' : 'text-surface-400 group-hover:text-surface-600']" />
+            <i :class="[item.icon, 'text-base transition-colors',
+              isActive(item.to) ? 'text-white' : 'text-surface-400 group-hover:text-surface-600']" />
             {{ item.label }}
-            <span v-if="item.to === '/couple' && coupleStore.couple?.waitingForPartner" class="ml-auto w-2 h-2 rounded-full bg-amber-400" />
+            <span v-if="item.to === '/couple' && coupleStore.couple?.waitingForPartner"
+              class="ml-auto w-2 h-2 rounded-full bg-amber-400" />
           </RouterLink>
         </nav>
 
@@ -51,7 +57,8 @@
                 <span class="text-surface-600 text-xs font-medium">{{ member.firstName[0] }}</span>
               </div>
             </template>
-            <div v-if="coupleStore.couple.waitingForPartner" class="w-6 h-6 rounded-full border-2 border-white border-dashed border-surface-300 bg-surface-50 flex items-center justify-center">
+            <div v-if="coupleStore.couple.waitingForPartner"
+              class="w-6 h-6 rounded-full border-2 border-white border-dashed border-surface-300 bg-surface-50 flex items-center justify-center">
               <i class="pi pi-plus text-surface-400" style="font-size: 8px" />
             </div>
           </div>
@@ -74,7 +81,9 @@
               <p class="font-medium text-surface-800 text-xs truncate">{{ auth.fullName }}</p>
               <p class="text-surface-400 text-xs truncate">{{ auth.user?.email }}</p>
             </div>
-            <button @click="handleLogout" class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors shrink-0" title="Sair">
+            <button @click="handleLogout"
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-surface-400 hover:bg-surface-100 hover:text-surface-700 transition-colors shrink-0"
+              title="Sair">
               <i class="pi pi-sign-out text-xs" />
             </button>
           </div>
@@ -105,15 +114,18 @@
         </div>
       </header>
 
+      <!-- Content -->
       <main class="flex-1 overflow-y-auto scrollbar-thin pb-16 lg:pb-0">
         <RouterView />
       </main>
     </div>
 
-    <!-- ── BOTTOM NAV (mobile) ───────────────────────────────────────── -->
+    <!-- BOTTOM NAV (mobile) -->
     <nav class="fixed bottom-0 inset-x-0 z-20 lg:hidden bg-white border-t border-surface-200 flex items-center safe-bottom">
       <RouterLink
-        v-for="item in navItems" :key="item.to" :to="item.to"
+        v-for="item in mobileNavItems"
+        :key="item.to"
+        :to="item.to"
         class="relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors"
         :class="isActive(item.to) ? 'text-surface-900' : 'text-surface-400'"
       >
@@ -123,6 +135,7 @@
           class="absolute top-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
       </RouterLink>
     </nav>
+
   </div>
 </template>
 
@@ -150,26 +163,40 @@ function checkBreakpoint() {
 onMounted(() => { checkBreakpoint(); window.addEventListener('resize', checkBreakpoint) })
 onUnmounted(() => { window.removeEventListener('resize', checkBreakpoint) })
 
+// Nav completo para sidebar desktop
 const navItems = [
-  { to: '/dashboard',    label: 'Dashboard',   icon: 'pi pi-chart-line' },
-  { to: '/transactions', label: 'Transações',  icon: 'pi pi-list'       },
-  { to: '/goals',        label: 'Metas',       icon: 'pi pi-flag'       },
-  { to: '/reports',      label: 'Relatórios',  icon: 'pi pi-chart-bar'  },
-  { to: '/categories',   label: 'Categorias',  icon: 'pi pi-tag'        },
-  { to: '/couple',       label: 'Casal',       icon: 'pi pi-users'      }
+  { to: '/dashboard',    label: 'Dashboard',  icon: 'pi pi-chart-line' },
+  { to: '/transactions', label: 'Transações', icon: 'pi pi-list'       },
+  { to: '/goals',        label: 'Metas',      icon: 'pi pi-flag'       },
+  { to: '/budget',       label: 'Orçamento',  icon: 'pi pi-wallet'     },
+  { to: '/reports',      label: 'Relatórios', icon: 'pi pi-chart-bar'  },
+  { to: '/categories',   label: 'Categorias', icon: 'pi pi-tag'        },
+  { to: '/couple',       label: 'Casal',      icon: 'pi pi-users'      }
+]
+
+// Bottom nav mobile: só os 5 mais usados (sem Categorias e Relatórios)
+const mobileNavItems = [
+  { to: '/dashboard',    label: 'Dashboard',  icon: 'pi pi-chart-line' },
+  { to: '/transactions', label: 'Transações', icon: 'pi pi-list'       },
+  { to: '/goals',        label: 'Metas',      icon: 'pi pi-flag'       },
+  { to: '/budget',       label: 'Orçamento',  icon: 'pi pi-wallet'     },
+  { to: '/couple',       label: 'Casal',      icon: 'pi pi-users'      }
 ]
 
 const routeTitles: Record<string, string> = {
   '/dashboard':    'Dashboard',
   '/transactions': 'Transações',
   '/goals':        'Metas',
+  '/budget':       'Orçamento',
   '/reports':      'Relatórios',
   '/categories':   'Categorias',
   '/couple':       'Nosso casal'
 }
 
 const currentTitle = computed(() => routeTitles[route.path] ?? 'DuoFinance')
-const currentDate  = computed(() => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+const currentDate  = computed(() =>
+  new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+)
 
 function isActive(path: string) { return route.path.startsWith(path) }
 
