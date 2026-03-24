@@ -42,8 +42,17 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as typeof error.config & { _retry?: boolean }
+    const status = error.response?.status
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // ── 502 / 503 / 504: gateway error — API temporariamente indisponível ────
+    // Não tenta refresh nem redireciona — apenas propaga o erro para que
+    // o componente exiba uma mensagem adequada ao usuário.
+    if (status === 502 || status === 503 || status === 504) {
+      return Promise.reject(new Error('Serviço temporariamente indisponível. Tente novamente em instantes.'))
+    }
+
+    // ── 401: token expirado — tenta refresh ───────────────────────────────────
+    if (status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
