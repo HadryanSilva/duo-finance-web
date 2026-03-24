@@ -6,12 +6,7 @@ import type {
   SummaryResponse, ByCategoryResponse, MonthlyComparisonResponse,
   BalanceHistoryResponse, PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
-  BudgetOverviewResponse, BudgetComparisonResponse, BudgetAllocationResponse,
-  TransactionCategory, NotificationListResponse, NotificationSettingsResponse
-} from '@/types'
-
-import type {
-
+  TransactionCategory
 } from '@/types'
 
 // ── User ──────────────────────────────────────────────────────────────────────
@@ -188,7 +183,7 @@ export interface UpdateGoalPayload {
 }
 
 export const goalService = {
-  list: () => api.get<GoalResponse[]>('/goals').then(r => r.data),
+  list: () => api.get<GoalResponse[]>('/goals').then(r => r.data ?? []),
   create: (payload: CreateGoalPayload) =>
     api.post<GoalResponse>('/goals', payload).then(r => r.data),
   update: (id: string, payload: UpdateGoalPayload) =>
@@ -198,63 +193,5 @@ export const goalService = {
   delete: (id: string) =>
     api.delete(`/goals/${id}`),
   progress: () =>
-    api.get<GoalProgressResponse[]>('/goals/progress').then(r => r.data),
-}
-
-export interface CategoryAllocationPayload {
-  category: TransactionCategory
-  percentage: number
-}
-
-export const budgetService = {
-  /** Visão consolidada do orçamento do mês */
-  overview: (year?: number, month?: number) =>
-    api.get<BudgetOverviewResponse>('/budget/overview', {
-      params: { ...(year ? { year } : {}), ...(month ? { month } : {}) }
-    }).then(r => r.data),
-
-  /** Lista alocações atuais com valores calculados */
-  listAllocations: () =>
-    api.get<BudgetAllocationResponse[]>('/budget/allocations').then(r => r.data),
-
-  /** Define ou atualiza a renda mensal do casal */
-  setIncome: (monthlyIncome: number) =>
-    api.put('/budget/income', { monthlyIncome }),
-
-  /** Remove a renda mensal */
-  removeIncome: () =>
-    api.delete('/budget/income'),
-
-  /** Salva alocações do orçamento (cria ou atualiza por categoria) */
-  saveBudget: (allocations: CategoryAllocationPayload[]) =>
-    api.put<BudgetAllocationResponse[]>('/budget', { allocations }).then(r => r.data),
-
-  /** Remove uma categoria do orçamento */
-  deleteCategory: (category: TransactionCategory) =>
-    api.delete(`/budget/category/${category}`),
-
-  /** Limpa todo o orçamento */
-  clearAll: () =>
-    api.delete('/budget'),
-
-  /** Comparação orçado vs realizado por N meses */
-  comparison: (months = 6) =>
-    api.get<BudgetComparisonResponse>('/budget/comparison', { params: { months } }).then(r => r.data),
-}
-
-export const notificationService = {
-  list: () =>
-    api.get<NotificationListResponse>('/notifications').then(r => r.data),
-
-  markAsRead: (id: string) =>
-    api.patch(`/notifications/${id}/read`),
-
-  markAllAsRead: () =>
-    api.patch('/notifications/read-all'),
-
-  getSettings: () =>
-    api.get<NotificationSettingsResponse>('/notifications/settings').then(r => r.data),
-
-  toggleSettings: () =>
-    api.patch<NotificationSettingsResponse>('/notifications/settings/toggle').then(r => r.data),
+    api.get<GoalProgressResponse[]>('/goals/progress').then(r => r.data ?? []),
 }
