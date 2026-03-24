@@ -362,7 +362,7 @@ async function loadAll() {
     reportService.summary(period).then(d => summary.value = d).finally(() => loadingSummary.value = false),
     reportService.byCategory(period, 'EXPENSE').then(d => categoryData.value = d).finally(() => loadingCategory.value = false),
     reportService.monthlyComparison().then(d => monthlyData.value = d).finally(() => loadingMonthly.value = false),
-    transactionService.list({ ...period, size: 8 }).then(d => recentTransactions.value = d.content).finally(() => loadingTransactions.value = false),
+    transactionService.list({ ...period, size: 8 }).then(d => recentTransactions.value = d.content ?? []).finally(() => loadingTransactions.value = false),
     goalStore.fetchProgress(),
   ]
 
@@ -427,8 +427,8 @@ const partnerChartData = computed(() => {
   return {
     labels: [partner1.firstName, partner2.firstName],
     datasets: [
-      { label: 'Receitas', data: [partner1.totalIncome, partner2.totalIncome], backgroundColor: '#22c55e', borderRadius: 6, borderSkipped: false, maxBarThickness: 48 },
-      { label: 'Despesas', data: [partner1.totalExpense, partner2.totalExpense], backgroundColor: '#fca5a5', borderRadius: 6, borderSkipped: false, maxBarThickness: 48 }
+      { label: 'Receitas', data: [partner1.totalIncome, partner2.totalIncome], backgroundColor: '#22c55e', borderRadius: 6, borderSkipped: false },
+      { label: 'Despesas', data: [partner1.totalExpense, partner2.totalExpense], backgroundColor: '#fca5a5', borderRadius: 6, borderSkipped: false }
     ]
   }
 })
@@ -445,6 +445,12 @@ const barOptions = {
 const partnerBarOptions = {
   responsive: true, maintainAspectRatio: false,
   plugins: { legend: { display: false }, tooltip: { mode: 'index' as const } },
+  datasets: {
+    bar: {
+      barPercentage: 0.6,      // largura da barra em relação ao espaço do grupo
+      categoryPercentage: 0.8  // largura do grupo em relação ao espaço da categoria
+    }
+  },
   scales: {
     x: { grid: { display: false }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 } } },
     y: { grid: { color: '#f1f0ee' }, border: { display: false }, ticks: { color: '#a8a49c', font: { size: 11 }, callback: (v: string | number) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0 }) } }
