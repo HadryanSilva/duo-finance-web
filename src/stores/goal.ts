@@ -24,7 +24,7 @@ export const useGoalStore = defineStore('goal', () => {
     loading.value = true
     error.value   = null
     try {
-      goals.value = await goalService.list()
+      goals.value = (await goalService.list()) ?? []
     } catch (e: unknown) {
       error.value = apiMessage(e, 'Erro ao carregar metas')
     } finally {
@@ -36,7 +36,7 @@ export const useGoalStore = defineStore('goal', () => {
     loading.value = true
     error.value   = null
     try {
-      progress.value = await goalService.progress()
+      progress.value = (await goalService.progress()) ?? []
     } catch (e: unknown) {
       error.value = apiMessage(e, 'Erro ao carregar progresso das metas')
     } finally {

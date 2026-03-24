@@ -188,7 +188,7 @@ export interface UpdateGoalPayload {
 }
 
 export const goalService = {
-  list: () => api.get<GoalResponse[]>('/goals').then(r => r.data),
+  list: () => api.get<GoalResponse[]>('/goals').then(r => r.data ?? []),
   create: (payload: CreateGoalPayload) =>
     api.post<GoalResponse>('/goals', payload).then(r => r.data),
   update: (id: string, payload: UpdateGoalPayload) =>
@@ -198,7 +198,7 @@ export const goalService = {
   delete: (id: string) =>
     api.delete(`/goals/${id}`),
   progress: () =>
-    api.get<GoalProgressResponse[]>('/goals/progress').then(r => r.data),
+    api.get<GoalProgressResponse[]>('/goals/progress').then(r => r.data ?? []),
 }
 
 export interface CategoryAllocationPayload {
