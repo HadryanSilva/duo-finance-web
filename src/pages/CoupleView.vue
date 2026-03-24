@@ -73,7 +73,7 @@
 
         <!-- Membros -->
         <div class="space-y-3">
-          <div v-for="member in coupleStore.couple.members" :key="member.id" class="flex items-center gap-3 p-3 rounded-xl bg-surface-50">
+          <div v-for="member in coupleStore.couple?.members ?? []" :key="member.id" class="flex items-center gap-3 p-3 rounded-xl bg-surface-50">
             <img v-if="member.avatarUrl" :src="member.avatarUrl" :alt="member.firstName" class="w-10 h-10 rounded-full object-cover" />
             <div v-else class="w-10 h-10 rounded-full bg-surface-200 flex items-center justify-center">
               <span class="font-medium text-surface-600">{{ member.firstName[0] }}</span>
@@ -101,7 +101,7 @@
       </div>
 
       <!-- Convidar parceiro -->
-      <div v-if="coupleStore.couple.waitingForPartner || coupleStore.couple.members.length < 2" class="card">
+      <div v-if="coupleStore.couple?.waitingForPartner || (coupleStore.couple?.members?.length ?? 0) < 2" class="card">
         <h3 class="font-display font-semibold text-surface-900 mb-1">Convidar parceiro</h3>
         <p class="text-sm text-surface-400 mb-4">Enviaremos um e-mail com link de acesso. O convite expira em 72 horas.</p>
         <div class="flex gap-2">

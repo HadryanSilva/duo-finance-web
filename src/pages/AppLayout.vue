@@ -51,7 +51,7 @@
             <span class="text-xs text-surface-500 font-medium">{{ coupleStore.couple.name }}</span>
           </div>
           <div class="flex -space-x-1">
-            <template v-for="member in coupleStore.couple.members" :key="member.id">
+            <template v-for="member in coupleStore.couple?.members ?? []" :key="member.id">
               <img v-if="member.avatarUrl" :src="member.avatarUrl" :alt="member.firstName" class="w-6 h-6 rounded-full border-2 border-white object-cover" />
               <div v-else class="w-6 h-6 rounded-full border-2 border-white bg-surface-200 flex items-center justify-center">
                 <span class="text-surface-600 text-xs font-medium">{{ member.firstName[0] }}</span>
@@ -108,8 +108,9 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <!-- Substituir o botão estático pelo componente: -->
-          <NotificationDropdown />
+          <button class="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:bg-surface-50 hover:text-surface-700 transition-colors">
+            <i class="pi pi-bell text-sm" />
+          </button>
         </div>
       </header>
 
@@ -143,9 +144,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
-import { useSessionKeepAlive } from '@/composables/useSessionKeepAlive'
 import ProfileModal from './ProfileModal.vue'
-import NotificationDropdown from '../components/NotificationDropdown.vue'
 
 const auth        = useAuthStore()
 const coupleStore = useCoupleStore()
@@ -160,8 +159,6 @@ function checkBreakpoint() {
   isDesktop.value = window.innerWidth >= 1024
   if (isDesktop.value) sidebarOpen.value = false
 }
-
-useSessionKeepAlive()
 
 onMounted(() => { checkBreakpoint(); window.addEventListener('resize', checkBreakpoint) })
 onUnmounted(() => { window.removeEventListener('resize', checkBreakpoint) })

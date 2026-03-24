@@ -23,6 +23,6 @@ export const categoryIconMap: Partial<Record<TransactionCategory, string>> = {
   OTHER_INCOME:  'pi pi-plus-circle',
 }
 
-export function categoryIcon(cat: TransactionCategory): string {
-  return categoryIconMap[cat] ?? 'pi pi-circle'
+export function categoryIcon(cat: TransactionCategory | null): string {
+  return (cat && categoryIconMap[cat]) ?? 'pi pi-circle'
 }
