@@ -1,64 +1,28 @@
 <template>
-  <div class="min-h-screen bg-surface-50 flex">
+  <div class="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
 
-    <!-- Lado esquerdo — decorativo -->
-    <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-surface-900">
-      <div class="absolute inset-0 opacity-[0.04]"
-           style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 48px 48px;" />
-      <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary-500/10 blur-3xl" />
-      <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-primary-400/8 blur-3xl" />
-
-      <div class="relative z-10 flex flex-col justify-between p-14 w-full">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-primary-500 flex items-center justify-center">
-            <i class="pi pi-heart text-white text-sm" />
-          </div>
-          <span class="font-display text-white text-xl font-semibold tracking-tight">DuoFinance</span>
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-surface-900 mb-4">
+          <i class="pi pi-heart-fill text-white text-2xl" />
         </div>
-
-        <div>
-          <p class="text-surface-400 text-sm font-medium uppercase tracking-widest mb-6">Finanças a dois</p>
-          <h1 class="font-display text-white text-5xl font-bold leading-tight mb-6">
-            Controle financeiro<br />
-            <span class="text-primary-400">feito para casal.</span>
-          </h1>
-          <p class="text-surface-400 text-lg leading-relaxed max-w-sm">
-            Centralize receitas, despesas e relatórios em um espaço compartilhado com seu parceiro.
-          </p>
-        </div>
-
-        <div class="flex gap-8">
-          <div>
-            <p class="font-display text-white text-3xl font-bold">100%</p>
-            <p class="text-surface-500 text-sm mt-1">Privado</p>
-          </div>
-          <div>
-            <p class="font-display text-white text-3xl font-bold">2</p>
-            <p class="text-surface-500 text-sm mt-1">Parceiros</p>
-          </div>
-          <div>
-            <p class="font-display text-white text-3xl font-bold">∞</p>
-            <p class="text-surface-500 text-sm mt-1">Lançamentos</p>
-          </div>
-        </div>
+        <h1 class="font-display text-2xl font-bold text-surface-900">DuoFinance</h1>
+        <p class="text-surface-500 text-sm mt-1">Finanças a dois, juntos.</p>
       </div>
-    </div>
 
-    <!-- Lado direito — formulário -->
-    <div class="flex-1 flex items-center justify-center p-8">
-      <div class="w-full max-w-sm">
+      <div class="bg-white rounded-2xl shadow-sm border border-surface-100 p-8">
 
-        <!-- Logo mobile -->
-        <div class="flex items-center gap-3 mb-10 lg:hidden">
-          <div class="w-9 h-9 rounded-xl bg-primary-500 flex items-center justify-center">
-            <i class="pi pi-heart text-white text-sm" />
-          </div>
-          <span class="font-display text-surface-900 text-xl font-semibold">DuoFinance</span>
+        <!-- Banner: sessão expirada por inatividade -->
+        <div v-if="sessionExpired"
+          class="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm mb-6">
+          <i class="pi pi-clock text-amber-500 shrink-0" />
+          <span>Sua sessão expirou por inatividade. Faça login novamente.</span>
         </div>
 
-        <!-- Título -->
-        <div class="mb-8">
-          <h2 class="font-display text-3xl font-bold text-surface-900 mb-2">
+        <!-- Cabeçalho -->
+        <div class="mb-6">
+          <h2 class="font-display text-xl font-bold text-surface-900 mb-1">
             {{ mode === 'register' ? 'Criar conta' : 'Bem-vindo de volta' }}
           </h2>
           <p class="text-surface-500">
@@ -116,6 +80,7 @@
             </div>
           </template>
 
+          <!-- E-mail -->
           <div>
             <label class="block text-sm font-medium text-surface-700 mb-1.5">E-mail</label>
             <input
@@ -127,7 +92,7 @@
             />
           </div>
 
-          <!-- ── Senha com link "Esqueci minha senha" — RF26 ── -->
+          <!-- Senha com link "Esqueci minha senha" -->
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label class="block text-sm font-medium text-surface-700">Senha</label>
@@ -159,10 +124,11 @@
             <p v-if="mode === 'register'" class="text-xs text-surface-400 mt-1.5">Mínimo de 8 caracteres</p>
           </div>
 
+          <!-- Botão de submit -->
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-3 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 active:scale-[0.99] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="w-full py-3 rounded-xl bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 active:scale-[0.99] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <i v-if="loading" class="pi pi-spin pi-spinner" />
             <span>{{ mode === 'register' ? 'Criar conta' : 'Entrar' }}</span>
@@ -171,32 +137,31 @@
 
         <!-- Divisor -->
         <div class="flex items-center gap-3 my-5">
-          <div class="flex-1 h-px bg-surface-200" />
-          <span class="text-surface-400 text-xs">ou</span>
-          <div class="flex-1 h-px bg-surface-200" />
+          <div class="flex-1 h-px bg-surface-100" />
+          <span class="text-xs text-surface-400">ou</span>
+          <div class="flex-1 h-px bg-surface-100" />
         </div>
 
-        <!-- Botão Google -->
+        <!-- Login com Google -->
         <button
           @click="loginWithGoogle"
           :disabled="loading"
-          class="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl border border-surface-200 bg-white text-surface-800 font-medium text-sm hover:bg-surface-50 hover:border-surface-300 active:scale-[0.99] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
-          style="box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08)"
+          class="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-surface-200 bg-white text-surface-700 text-sm font-medium hover:bg-surface-50 hover:border-surface-300 active:scale-[0.99] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/>
-            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/>
-            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
-            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
           Continuar com Google
         </button>
 
-        <p class="text-center text-surface-400 text-xs mt-8 leading-relaxed">
-          Ao entrar, você concorda com nossos<br />
-          <a href="#" class="text-surface-600 hover:text-surface-900 underline underline-offset-2">Termos de uso</a>
-          e
-          <a href="#" class="text-surface-600 hover:text-surface-900 underline underline-offset-2">Política de privacidade</a>.
+        <!-- Rodapé informativo -->
+        <p class="text-center text-xs text-surface-400 mt-6">
+          Ao continuar, você concorda com nossos
+          <span class="text-surface-600">Termos de Uso</span> e
+          <span class="text-surface-600">Política de Privacidade</span>.
         </p>
       </div>
     </div>
@@ -204,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services'
@@ -229,6 +194,9 @@ const firstName = ref('')
 const lastName  = ref('')
 const email     = ref('')
 const password  = ref('')
+
+// Detecta redirecionamento por sessão expirada
+const sessionExpired = computed(() => route.query.reason === 'session_expired')
 
 function switchMode(m: Mode) {
   mode.value     = m
@@ -264,7 +232,6 @@ async function submitLocal() {
 
 function loginWithGoogle() {
   loading.value = true
-  // Salva o redirect para o CallbackView restaurar após o OAuth2
   const redirect = route.query.redirect as string | undefined
   if (redirect) {
     sessionStorage.setItem('oauth2_redirect', redirect)
