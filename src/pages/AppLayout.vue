@@ -143,6 +143,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
+import { useSessionKeepAlive } from '@/composables/useSessionKeepAlive'
 import ProfileModal from './ProfileModal.vue'
 import NotificationDropdown from '../components/NotificationDropdown.vue'
 
@@ -159,6 +160,8 @@ function checkBreakpoint() {
   isDesktop.value = window.innerWidth >= 1024
   if (isDesktop.value) sidebarOpen.value = false
 }
+
+useSessionKeepAlive()
 
 onMounted(() => { checkBreakpoint(); window.addEventListener('resize', checkBreakpoint) })
 onUnmounted(() => { window.removeEventListener('resize', checkBreakpoint) })
