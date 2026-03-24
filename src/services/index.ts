@@ -1,4 +1,4 @@
-import api from './api'
+import api, { authApi } from './api'
 import type {
   TokenResponse, UserInfo,
   CoupleResponse, InviteResponse, JoinCoupleResponse,
@@ -33,8 +33,8 @@ export const userService = {
 export const authService = {
   me: () => api.get<UserInfo>('/users/me').then(r => r.data),
   refresh: (refreshToken: string) =>
-    api.post<TokenResponse>('/auth/refresh', { refreshToken }).then(r => r.data),
-  logout: () => api.post('/auth/logout'),
+    authApi.post<TokenResponse>('/refresh', { refreshToken }).then(r => r.data),
+  logout: () => authApi.post('/logout'),
   register: (firstName: string, lastName: string, email: string, password: string) =>
     api.post<TokenResponse>('/auth/register', { firstName, lastName, email, password }).then(r => r.data),
   login: (email: string, password: string) =>
