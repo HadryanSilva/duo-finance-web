@@ -262,9 +262,31 @@ export const notificationService = {
 
 export const importService = {
   async importStatement(file: File): Promise<ImportResult> {
+    const extension = file.name.split('.').pop()?.toLowerCase()
+
+    if (extension === 'ofx') {
+      return this.importOfx(file)
+    }
+    if (extension === 'xlsx') {
+      return this.importXlsx(file)
+    }
+
+    throw new Error('Formato não suportado. Envie um arquivo .ofx ou .xlsx.')
+  },
+
+  async importXlsx(file: File): Promise<ImportResult> {
     const formData = new FormData()
     formData.append('file', file)
-    const { data } = await api.post<ImportResult>('/imports/btg', formData, {
+    const { data } = await api.post<ImportResult>('/imports/xlsx', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return data
+  },
+
+  async importOfx(file: File): Promise<ImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const { data } = await api.post<ImportResult>('/imports/ofx', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     return data

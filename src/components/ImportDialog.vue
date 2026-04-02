@@ -10,9 +10,16 @@
     <!-- Estado: aguardando arquivo -->
     <div v-if="!result" class="space-y-4 pt-2">
       <p class="text-sm text-surface-500">
-        Faça o upload do extrato <strong class="text-surface-700">.xlsx</strong> exportado pelo seu banco.
+        Faça o upload do extrato exportado pelo seu banco.
         As transações serão importadas automaticamente e duplicatas serão ignoradas.
       </p>
+
+      <!-- Formatos suportados -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs text-surface-400">Formatos aceitos:</span>
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-100 text-surface-600">.ofx</span>
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-100 text-surface-600">.xlsx</span>
+      </div>
 
       <!-- Dropzone -->
       <div
@@ -26,7 +33,7 @@
         @click="fileInput?.click()"
       >
         <div class="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center">
-          <i class="pi pi-file-excel text-xl text-surface-400" />
+          <i class="pi pi-file-import text-xl text-surface-400" />
         </div>
 
         <div class="text-center">
@@ -36,11 +43,11 @@
           <p v-else class="text-sm font-medium text-surface-700">
             <i class="pi pi-check-circle text-green-500 mr-1.5" />{{ selectedFile.name }}
           </p>
-          <p class="text-xs text-surface-400 mt-1">Apenas arquivos .xlsx · Máximo 10 MB</p>
+          <p class="text-xs text-surface-400 mt-1">Arquivos .ofx ou .xlsx · Máximo 10 MB</p>
         </div>
       </div>
 
-      <input ref="fileInput" type="file" accept=".xlsx" class="hidden" @change="onFileChange" />
+      <input ref="fileInput" type="file" accept=".ofx,.xlsx" class="hidden" @change="onFileChange" />
 
       <!-- Erro -->
       <p v-if="errorMsg" class="text-sm text-red-500 flex items-center gap-1.5">
@@ -101,6 +108,9 @@ import { useToast } from 'primevue/usetoast'
 import { importService } from '@/services/index'
 import type { ImportResult } from '@/types/index'
 
+const ACCEPTED_EXTENSIONS = ['.ofx', '.xlsx']
+const MAX_SIZE_BYTES = 10 * 1024 * 1024
+
 const props = defineProps<{ modelValue: boolean }>()
 const emit  = defineEmits<{
   'update:modelValue': [boolean]
@@ -112,13 +122,13 @@ const visible = computed({
   set: (v) => emit('update:modelValue', v)
 })
 
-const toast       = useToast()
-const fileInput   = ref<HTMLInputElement | null>(null)
+const toast        = useToast()
+const fileInput    = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
-const importing   = ref(false)
-const dragOver    = ref(false)
-const errorMsg    = ref('')
-const result      = ref<ImportResult | null>(null)
+const importing    = ref(false)
+const dragOver     = ref(false)
+const errorMsg     = ref('')
+const result       = ref<ImportResult | null>(null)
 
 function onFileChange(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0]
@@ -133,11 +143,12 @@ function onDrop(e: DragEvent) {
 
 function setFile(f: File) {
   errorMsg.value = ''
-  if (!f.name.toLowerCase().endsWith('.xlsx')) {
-    errorMsg.value = 'Apenas arquivos .xlsx são aceitos.'
+  const ext = '.' + f.name.split('.').pop()?.toLowerCase()
+  if (!ACCEPTED_EXTENSIONS.includes(ext)) {
+    errorMsg.value = `Formato não suportado. Envie um arquivo ${ACCEPTED_EXTENSIONS.join(' ou ')}.`
     return
   }
-  if (f.size > 10 * 1024 * 1024) {
+  if (f.size > MAX_SIZE_BYTES) {
     errorMsg.value = 'O arquivo não pode ultrapassar 10 MB.'
     return
   }
