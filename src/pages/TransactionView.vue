@@ -37,7 +37,16 @@
           </button>
         </div>
 
-        <Button label="Nova" icon="pi pi-plus" @click="openCreate" class="shrink-0" size="small" />
+        <div class="flex items-center gap-2 shrink-0">
+          <Button
+            icon="pi pi-upload"
+            v-tooltip.bottom="'Importar extrato'"
+            severity="secondary"
+            size="small"
+            @click="showImport = true"
+          />
+          <Button label="Nova" icon="pi pi-plus" @click="openCreate" size="small" />
+        </div>
       </div>
 
       <!-- Linha 2: busca + categoria + mês -->

@@ -1,7 +1,7 @@
 <template>
   <Dialog
     v-model:visible="visible"
-    header="Importar extrato BTG Pactual"
+    header="Importar extrato bancário"
     :modal="true"
     :style="{ width: 'min(480px, 95vw)' }"
     :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }"
@@ -10,7 +10,7 @@
     <!-- Estado: aguardando arquivo -->
     <div v-if="!result" class="space-y-4 pt-2">
       <p class="text-sm text-surface-500">
-        Faça o upload do extrato <strong class="text-surface-700">.xlsx</strong> exportado pelo app do BTG Pactual.
+        Faça o upload do extrato <strong class="text-surface-700">.xlsx</strong> exportado pelo seu banco.
         As transações serão importadas automaticamente e duplicatas serão ignoradas.
       </p>
 
@@ -149,7 +149,7 @@ async function doImport() {
   importing.value = true
   errorMsg.value  = ''
   try {
-    result.value = await importService.importBtg(selectedFile.value)
+    result.value = await importService.importStatement(selectedFile.value)
     emit('imported')
   } catch (e: unknown) {
     const detail = (e as { response?: { data?: { detail?: string } } })
