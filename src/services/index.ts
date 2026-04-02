@@ -261,7 +261,7 @@ export const notificationService = {
 }
 
 export const importService = {
-  async importBtg(file: File): Promise<ImportResult> {
+  async importStatement(file: File): Promise<ImportResult> {
     const formData = new FormData()
     formData.append('file', file)
     const { data } = await api.post<ImportResult>('/imports/btg', formData, {
