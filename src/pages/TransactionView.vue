@@ -71,14 +71,17 @@
           >
             <option :value="undefined">Todas as categorias</option>
             <optgroup v-if="expenseCategories.length" label="Despesas">
-              <option v-for="cat in expenseCategories" :key="cat.name" :value="cat.name">{{ cat.label }}</option>
+              <option v-for="cat in expenseCategories" :key="cat.name ?? cat.label" :value="cat.name">{{ cat.label }}</option>
             </optgroup>
             <optgroup v-if="incomeCategories.length && !filters.type" label="Receitas">
-              <option v-for="cat in incomeCategories" :key="cat.name" :value="cat.name">{{ cat.label }}</option>
+              <option v-for="cat in incomeCategories" :key="cat.name ?? cat.label" :value="cat.name">{{ cat.label }}</option>
             </optgroup>
           </select>
           <i class="pi pi-chevron-down text-[10px] text-surface-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
+
+        <Button icon="pi pi-upload" label="Importar" severity="secondary" @click="showImport = true" />
+        <ImportDialog v-model="showImport" @imported="loadTransactions" />
 
         <!-- Seletor de mês -->
         <select
@@ -195,7 +198,7 @@
               <span class="text-xs text-surface-400">{{ formatDate(tx.date) }}</span>
               <span class="text-surface-200 text-xs">·</span>
               <button
-                @click="filters.category = tx.category; currentPage = 0"
+                @click="filters.category = tx.category ?? undefined; currentPage = 0"
                 class="text-xs text-surface-400 hover:text-surface-700 transition-colors"
                 :class="{ 'font-medium text-surface-600': filters.category === tx.category }"
               >{{ tx.categoryLabel }}</button>
@@ -383,10 +386,12 @@ import TransactionForm from './TransactionForm.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
 import { categoryIcon } from '@/utils/categoryIcon'
+import ImportDialog from '../components/ImportDialog.vue'
 
 const toast       = useToast()
 const auth        = useAuthStore()
 const coupleStore = useCoupleStore()
+const showImport = ref(false)
 
 // ── Filtros ───────────────────────────────────────────────────────────────────
 

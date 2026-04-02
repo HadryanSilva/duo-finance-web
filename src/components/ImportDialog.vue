@@ -1,0 +1,172 @@
+<template>
+  <Dialog
+    v-model:visible="visible"
+    header="Importar extrato BTG Pactual"
+    :modal="true"
+    :style="{ width: 'min(480px, 95vw)' }"
+    :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }"
+    @hide="reset"
+  >
+    <!-- Estado: aguardando arquivo -->
+    <div v-if="!result" class="space-y-4 pt-2">
+      <p class="text-sm text-surface-500">
+        Faça o upload do extrato <strong class="text-surface-700">.xlsx</strong> exportado pelo app do BTG Pactual.
+        As transações serão importadas automaticamente e duplicatas serão ignoradas.
+      </p>
+
+      <!-- Dropzone -->
+      <div
+        class="border-2 border-dashed rounded-2xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors"
+        :class="dragOver
+          ? 'border-primary-400 bg-primary-50'
+          : 'border-surface-200 hover:border-surface-400 hover:bg-surface-50'"
+        @dragover.prevent="dragOver = true"
+        @dragleave.prevent="dragOver = false"
+        @drop.prevent="onDrop"
+        @click="fileInput?.click()"
+      >
+        <div class="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center">
+          <i class="pi pi-file-excel text-xl text-surface-400" />
+        </div>
+
+        <div class="text-center">
+          <p v-if="!selectedFile" class="text-sm font-medium text-surface-700">
+            Arraste o arquivo aqui ou <span class="text-primary-600 underline">clique para selecionar</span>
+          </p>
+          <p v-else class="text-sm font-medium text-surface-700">
+            <i class="pi pi-check-circle text-green-500 mr-1.5" />{{ selectedFile.name }}
+          </p>
+          <p class="text-xs text-surface-400 mt-1">Apenas arquivos .xlsx · Máximo 10 MB</p>
+        </div>
+      </div>
+
+      <input ref="fileInput" type="file" accept=".xlsx" class="hidden" @change="onFileChange" />
+
+      <!-- Erro -->
+      <p v-if="errorMsg" class="text-sm text-red-500 flex items-center gap-1.5">
+        <i class="pi pi-exclamation-circle" />{{ errorMsg }}
+      </p>
+
+      <!-- Ações -->
+      <div class="flex gap-2 pt-2">
+        <Button label="Cancelar" severity="secondary" class="flex-1" @click="visible = false" :disabled="importing" />
+        <Button
+          label="Importar"
+          icon="pi pi-upload"
+          class="flex-1"
+          :loading="importing"
+          :disabled="!selectedFile"
+          @click="doImport"
+        />
+      </div>
+    </div>
+
+    <!-- Estado: resultado -->
+    <div v-else class="space-y-4 pt-2">
+      <div class="bg-green-50 border border-green-200 rounded-2xl p-5 space-y-3">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-check-circle text-green-600 text-lg" />
+          <span class="font-semibold text-green-800">Importação concluída!</span>
+        </div>
+        <div class="grid grid-cols-3 gap-3 pt-1">
+          <div class="text-center">
+            <p class="text-2xl font-bold text-surface-800">{{ result.totalFound }}</p>
+            <p class="text-xs text-surface-500 mt-0.5">Encontradas</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-green-600">{{ result.totalImported }}</p>
+            <p class="text-xs text-surface-500 mt-0.5">Importadas</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-surface-400">{{ result.totalSkipped }}</p>
+            <p class="text-xs text-surface-500 mt-0.5">Duplicatas</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-sm text-surface-500">
+        As transações importadas já aparecem na lista de lançamentos.
+      </p>
+
+      <Button label="Fechar" class="w-full" @click="visible = false" />
+    </div>
+  </Dialog>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
+import { useToast } from 'primevue/usetoast'
+import { importService } from '@/services/index'
+import type { ImportResult } from '@/types/index'
+
+const props = defineProps<{ modelValue: boolean }>()
+const emit  = defineEmits<{
+  'update:modelValue': [boolean]
+  imported: []
+}>()
+
+const visible = computed({
+  get: () => props.modelValue,
+  set: (v) => emit('update:modelValue', v)
+})
+
+const toast       = useToast()
+const fileInput   = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
+const importing   = ref(false)
+const dragOver    = ref(false)
+const errorMsg    = ref('')
+const result      = ref<ImportResult | null>(null)
+
+function onFileChange(e: Event) {
+  const f = (e.target as HTMLInputElement).files?.[0]
+  if (f) setFile(f)
+}
+
+function onDrop(e: DragEvent) {
+  dragOver.value = false
+  const f = e.dataTransfer?.files?.[0]
+  if (f) setFile(f)
+}
+
+function setFile(f: File) {
+  errorMsg.value = ''
+  if (!f.name.toLowerCase().endsWith('.xlsx')) {
+    errorMsg.value = 'Apenas arquivos .xlsx são aceitos.'
+    return
+  }
+  if (f.size > 10 * 1024 * 1024) {
+    errorMsg.value = 'O arquivo não pode ultrapassar 10 MB.'
+    return
+  }
+  selectedFile.value = f
+}
+
+async function doImport() {
+  if (!selectedFile.value) return
+  importing.value = true
+  errorMsg.value  = ''
+  try {
+    result.value = await importService.importBtg(selectedFile.value)
+    emit('imported')
+  } catch (e: unknown) {
+    const detail = (e as { response?: { data?: { detail?: string } } })
+      ?.response?.data?.detail ?? 'Erro ao importar. Verifique o arquivo e tente novamente.'
+    errorMsg.value = detail
+    toast.add({ severity: 'error', summary: 'Erro na importação', detail, life: 5000 })
+  } finally {
+    importing.value = false
+  }
+}
+
+function reset() {
+  selectedFile.value = null
+  importing.value    = false
+  dragOver.value     = false
+  errorMsg.value     = ''
+  result.value       = null
+  if (fileInput.value) fileInput.value.value = ''
+}
+</script>

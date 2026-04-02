@@ -281,3 +281,9 @@ export interface NotificationListResponse {
 export interface NotificationSettingsResponse {
   enabled: boolean
 }
+
+export interface ImportResult {
+  totalFound: number
+  totalImported: number
+  totalSkipped: number
+}

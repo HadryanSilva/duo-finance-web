@@ -7,7 +7,8 @@ import type {
   BalanceHistoryResponse, PartnerComparisonResponse,
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
   BudgetOverviewResponse, BudgetComparisonResponse, BudgetAllocationResponse,
-  TransactionCategory, NotificationListResponse, NotificationSettingsResponse
+  TransactionCategory, NotificationListResponse, NotificationSettingsResponse,
+  ImportResult
 } from '@/types'
 
 import type {
@@ -257,4 +258,15 @@ export const notificationService = {
 
   toggleSettings: () =>
     api.patch<NotificationSettingsResponse>('/notifications/settings/toggle').then(r => r.data),
+}
+
+export const importService = {
+  async importBtg(file: File): Promise<ImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const { data } = await api.post<ImportResult>('/imports/btg', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return data
+  }
 }
