@@ -4,7 +4,7 @@
     <!-- Toolbar -->
     <div class="flex flex-col gap-3">
 
-      <!-- Linha 1: filtros de tipo + botão nova -->
+      <!-- Linha 1: filtros de tipo + botões -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 flex-wrap">
           <button
@@ -37,6 +37,7 @@
           </button>
         </div>
 
+        <!-- Botões: Importar + Nova -->
         <div class="flex items-center gap-2 shrink-0">
           <Button
             icon="pi pi-upload"
@@ -88,9 +89,6 @@
           </select>
           <i class="pi pi-chevron-down text-[10px] text-surface-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
-
-        <Button icon="pi pi-upload" label="Importar" severity="secondary" @click="showImport = true" />
-        <ImportDialog v-model="showImport" @imported="loadTransactions" />
 
         <!-- Seletor de mês -->
         <select
@@ -275,6 +273,9 @@
       </div>
     </div>
 
+    <!-- Dialog: importar extrato bancário -->
+    <ImportDialog v-model="showImport" @imported="loadTransactions" />
+
     <!-- Dialog: criar / editar -->
     <Dialog
       v-model:visible="showDialog"
@@ -392,15 +393,14 @@ import type { UpdateRecurringPayload } from '@/services'
 import type { TransactionResponse, CategoryResponse, TransactionType, TransactionCategory, Page, RecurringScope } from '@/types'
 import type { CreateTransactionPayload } from '@/services'
 import TransactionForm from './TransactionForm.vue'
+import ImportDialog from '@/components/ImportDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
 import { categoryIcon } from '@/utils/categoryIcon'
-import ImportDialog from '../components/ImportDialog.vue'
 
 const toast       = useToast()
 const auth        = useAuthStore()
 const coupleStore = useCoupleStore()
-const showImport = ref(false)
 
 // ── Filtros ───────────────────────────────────────────────────────────────────
 
@@ -476,7 +476,6 @@ const sortOptions: { field: SortField; label: string }[] = [
   { field: 'category', label: 'Categoria' }
 ]
 
-// Clicar no campo ativo inverte a direção; clicar em outro campo reseta para desc
 function selectSort(field: SortField) {
   if (sortField.value === field) {
     sortDir.value = sortDir.value === 'desc' ? 'asc' : 'desc'
@@ -487,7 +486,6 @@ function selectSort(field: SortField) {
   currentPage.value = 0
 }
 
-// Monta o parâmetro sort no formato que o Spring Pageable espera: "field,direction"
 const sortParam = computed(() => `${sortField.value},${sortDir.value}`)
 
 // ── Busca ─────────────────────────────────────────────────────────────────────
@@ -556,6 +554,10 @@ onMounted(async () => {
 })
 watch([selectedMonth, currentPage, debouncedSearch, sortParam], loadTransactions)
 watch(filters, loadTransactions, { deep: true })
+
+// ── Import ────────────────────────────────────────────────────────────────────
+
+const showImport = ref(false)
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
 
@@ -630,7 +632,7 @@ const deleteTargetTx        = ref<TransactionResponse | null>(null)
 
 function handleDelete(tx: TransactionResponse) {
   if (tx.recurring || tx.parentTransactionId) {
-    deleteTargetTx.value       = tx
+    deleteTargetTx.value        = tx
     showDeleteScopeDialog.value = true
   } else {
     executeSimpleDelete(tx)
