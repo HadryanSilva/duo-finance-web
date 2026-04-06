@@ -264,12 +264,8 @@ export const importService = {
   async importStatement(file: File): Promise<ImportResult> {
     const extension = file.name.split('.').pop()?.toLowerCase()
 
-    if (extension === 'ofx') {
-      return this.importOfx(file)
-    }
-    if (extension === 'xlsx') {
-      return this.importXlsx(file)
-    }
+    if (extension === 'ofx')  return this.importOfx(file)
+    if (extension === 'xlsx') return this.importXlsx(file)
 
     throw new Error('Formato não suportado. Envie um arquivo .ofx ou .xlsx.')
   },

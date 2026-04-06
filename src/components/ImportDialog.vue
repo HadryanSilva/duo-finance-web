@@ -3,7 +3,7 @@
     v-model:visible="visible"
     header="Importar extrato bancário"
     :modal="true"
-    :style="{ width: 'min(480px, 95vw)' }"
+    :style="{ width: 'min(540px, 95vw)' }"
     :pt="{ content: { class: 'p-4 lg:p-6' }, header: { class: 'px-4 lg:px-6 pt-4 lg:pt-6 pb-0' } }"
     @hide="reset"
   >
@@ -70,6 +70,8 @@
 
     <!-- Estado: resultado -->
     <div v-else class="space-y-4 pt-2">
+
+      <!-- Resumo de contagens -->
       <div class="bg-green-50 border border-green-200 rounded-2xl p-5 space-y-3">
         <div class="flex items-center gap-2">
           <i class="pi pi-check-circle text-green-600 text-lg" />
@@ -91,7 +93,57 @@
         </div>
       </div>
 
-      <p class="text-sm text-surface-500">
+      <!-- Prováveis duplicatas -->
+      <div v-if="result.suspectedDuplicates.length > 0" class="space-y-3">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-exclamation-triangle text-amber-500" />
+          <span class="text-sm font-semibold text-surface-800">
+            {{ result.suspectedDuplicates.length }} provável{{ result.suspectedDuplicates.length > 1 ? 'is duplicata' : ' duplicata' }} detectada{{ result.suspectedDuplicates.length > 1 ? 's' : '' }}
+          </span>
+        </div>
+
+        <p class="text-xs text-surface-500">
+          As transações abaixo foram importadas, mas já existe um lançamento com mesmo valor, data e tipo.
+          Verifique se são registros distintos ou se o lançamento foi cadastrado manualmente.
+        </p>
+
+        <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+          <div
+            v-for="(dup, i) in result.suspectedDuplicates"
+            :key="i"
+            class="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-2"
+          >
+            <!-- Cabeçalho: data + valor -->
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-surface-500">{{ formatDate(dup.date) }}</span>
+              <span
+                class="text-sm font-mono font-semibold"
+                :class="dup.type === 'INCOME' ? 'text-green-600' : 'text-red-500'"
+              >
+                {{ dup.type === 'INCOME' ? '+' : '−' }} {{ formatCurrency(dup.amount) }}
+              </span>
+            </div>
+
+            <!-- Comparação lado a lado -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-white rounded-lg p-2 border border-amber-100">
+                <p class="text-[10px] font-semibold text-amber-600 uppercase tracking-wide mb-1">Importada</p>
+                <p class="text-xs text-surface-700 break-words leading-relaxed">
+                  {{ dup.importedDescription || '—' }}
+                </p>
+              </div>
+              <div class="bg-white rounded-lg p-2 border border-surface-200">
+                <p class="text-[10px] font-semibold text-surface-400 uppercase tracking-wide mb-1">Existente</p>
+                <p class="text-xs text-surface-700 break-words leading-relaxed">
+                  {{ dup.existingDescription || '—' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p v-else class="text-sm text-surface-500">
         As transações importadas já aparecem na lista de lançamentos.
       </p>
 
@@ -179,5 +231,15 @@ function reset() {
   errorMsg.value     = ''
   result.value       = null
   if (fileInput.value) fileInput.value.value = ''
+}
+
+function formatCurrency(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function formatDate(date: string) {
+  return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'short', year: 'numeric'
+  })
 }
 </script>
