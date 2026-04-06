@@ -8,11 +8,7 @@ import type {
   TransactionType, GoalResponse, GoalProgressResponse, RecurringScope,
   BudgetOverviewResponse, BudgetComparisonResponse, BudgetAllocationResponse,
   TransactionCategory, NotificationListResponse, NotificationSettingsResponse,
-  ImportResult
-} from '@/types'
-
-import type {
-
+  ImportResult, RecurringSeriesResponse
 } from '@/types'
 
 // ── User ──────────────────────────────────────────────────────────────────────
@@ -116,6 +112,8 @@ export const transactionService = {
     api.delete(`/transactions/${id}`),
   deleteRecurring: (id: string, payload: DeleteRecurringPayload) =>
     api.delete(`/transactions/${id}/recurring`, { data: payload }),
+  listRecurring: () =>
+    api.get<RecurringSeriesResponse[]>('/transactions/recurring').then(r => r.data),
 }
 
 // ── Categories (unificado: sistema + customizadas) ────────────────────────────

@@ -17,6 +17,7 @@ const router = createRouter({
         { path: '',             redirect: { name: 'dashboard' } },
         { path: 'dashboard',    name: 'dashboard',    component: () => import('@/pages/DashboardView.vue') },
         { path: 'transactions', name: 'transactions', component: () => import('@/pages/TransactionView.vue') },
+        { path: 'recurring',    name: 'recurring',    component: () => import('@/pages/RecurringView.vue') },
         { path: 'goals',        name: 'goals',        component: () => import('@/pages/GoalsView.vue') },
         { path: 'budget',       name: 'budget',       component: () => import('@/pages/BudgetView.vue') },
         { path: 'reports',      name: 'reports',      component: () => import('@/pages/ReportsView.vue') },
@@ -30,7 +31,7 @@ const router = createRouter({
 })
 
 const PUBLIC_ROUTES   = new Set(['login', 'auth-callback', 'invite', 'forgot-password', 'reset-password'])
-const REQUIRES_COUPLE = new Set(['dashboard', 'transactions', 'goals', 'budget', 'reports', 'categories'])
+const REQUIRES_COUPLE = new Set(['dashboard', 'transactions', 'recurring', 'goals', 'budget', 'reports', 'categories'])
 
 let sessionRestored = false
 
