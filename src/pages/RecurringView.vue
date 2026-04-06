@@ -219,9 +219,19 @@ function countByType(type: TransactionType | undefined) {
   return type ? series.value.filter(s => s.type === type).length : series.value.length
 }
 
+function parseLocalDate(dateString: string) {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 function isEnded(s: RecurringSeriesResponse) {
   if (!s.recurrenceEndDate) return false
-  return new Date(s.recurrenceEndDate) < new Date()
+
+  const recurrenceEndDate = parseLocalDate(s.recurrenceEndDate)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return recurrenceEndDate < today
 }
 
 async function load() {
