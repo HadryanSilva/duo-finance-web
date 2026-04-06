@@ -298,3 +298,21 @@ export interface ImportResult {
   totalSkipped: number
   suspectedDuplicates: SuspectedDuplicate[]
 }
+
+export interface RecurringSeriesResponse {
+  id: string
+  category: TransactionCategory | null
+  categoryLabel: string
+  categoryIcon: string
+  customCategoryId: string | null
+  type: TransactionType
+  amount: number
+  description: string | null
+  startDate: string
+  recurrenceRule: RecurrenceRule
+  recurrenceRuleLabel: string
+  recurrenceEndDate: string | null
+  nextOccurrence: string | null
+  occurrencesCount: number
+  createdBy: AuthorResponse
+}

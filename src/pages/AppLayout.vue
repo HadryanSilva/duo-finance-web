@@ -108,9 +108,7 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button class="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:bg-surface-50 hover:text-surface-700 transition-colors">
-            <i class="pi pi-bell text-sm" />
-          </button>
+          <NotificationDropdown />
         </div>
       </header>
 
@@ -145,6 +143,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCoupleStore } from '@/stores/couple'
 import ProfileModal from './ProfileModal.vue'
+import NotificationDropdown from '@/components/NotificationDropdown.vue'
 
 const auth        = useAuthStore()
 const coupleStore = useCoupleStore()
@@ -165,27 +164,29 @@ onUnmounted(() => { window.removeEventListener('resize', checkBreakpoint) })
 
 // Nav completo para sidebar desktop
 const navItems = [
-  { to: '/dashboard',    label: 'Dashboard',  icon: 'pi pi-chart-line' },
-  { to: '/transactions', label: 'Transações', icon: 'pi pi-list'       },
-  { to: '/goals',        label: 'Metas',      icon: 'pi pi-flag'       },
-  { to: '/budget',       label: 'Orçamento',  icon: 'pi pi-wallet'     },
-  { to: '/reports',      label: 'Relatórios', icon: 'pi pi-chart-bar'  },
-  { to: '/categories',   label: 'Categorias', icon: 'pi pi-tag'        },
-  { to: '/couple',       label: 'Casal',      icon: 'pi pi-users'      }
+  { to: '/dashboard',    label: 'Dashboard',    icon: 'pi pi-chart-line' },
+  { to: '/transactions', label: 'Transações',   icon: 'pi pi-list'       },
+  { to: '/recurring',    label: 'Recorrências', icon: 'pi pi-sync'       },
+  { to: '/goals',        label: 'Metas',        icon: 'pi pi-flag'       },
+  { to: '/budget',       label: 'Orçamento',    icon: 'pi pi-wallet'     },
+  { to: '/reports',      label: 'Relatórios',   icon: 'pi pi-chart-bar'  },
+  { to: '/categories',   label: 'Categorias',   icon: 'pi pi-tag'        },
+  { to: '/couple',       label: 'Casal',        icon: 'pi pi-users'      }
 ]
 
-// Bottom nav mobile: só os 5 mais usados (sem Categorias e Relatórios)
+// Bottom nav mobile: 5 itens mais usados
 const mobileNavItems = [
   { to: '/dashboard',    label: 'Dashboard',  icon: 'pi pi-chart-line' },
   { to: '/transactions', label: 'Transações', icon: 'pi pi-list'       },
+  { to: '/recurring',    label: 'Recorrente', icon: 'pi pi-sync'       },
   { to: '/goals',        label: 'Metas',      icon: 'pi pi-flag'       },
-  { to: '/budget',       label: 'Orçamento',  icon: 'pi pi-wallet'     },
   { to: '/couple',       label: 'Casal',      icon: 'pi pi-users'      }
 ]
 
 const routeTitles: Record<string, string> = {
   '/dashboard':    'Dashboard',
   '/transactions': 'Transações',
+  '/recurring':    'Recorrências',
   '/goals':        'Metas',
   '/budget':       'Orçamento',
   '/reports':      'Relatórios',
