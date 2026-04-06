@@ -282,8 +282,19 @@ export interface NotificationSettingsResponse {
   enabled: boolean
 }
 
+export interface SuspectedDuplicate {
+  importedId: string
+  importedDescription: string | null
+  existingId: string
+  existingDescription: string | null
+  date: string
+  amount: number
+  type: TransactionType
+}
+
 export interface ImportResult {
   totalFound: number
   totalImported: number
   totalSkipped: number
+  suspectedDuplicates: SuspectedDuplicate[]
 }
