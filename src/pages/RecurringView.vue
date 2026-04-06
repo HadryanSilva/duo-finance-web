@@ -323,7 +323,9 @@ async function stopSeries(s: RecurringSeriesResponse) {
     const date = tomorrow.toISOString().slice(0, 10)
 
     const payload: UpdateRecurringPayload = {
-      category:    s.category ?? undefined,
+      ...(s.customCategoryId
+        ? { customCategoryId: s.customCategoryId }
+        : { category: s.category ?? undefined }),
       amount:      s.amount,
       description: s.description ?? undefined,
       date,
