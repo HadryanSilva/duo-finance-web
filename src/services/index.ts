@@ -113,7 +113,7 @@ export const transactionService = {
   deleteRecurring: (id: string, payload: DeleteRecurringPayload) =>
     api.delete(`/transactions/${id}/recurring`, { data: payload }),
   listRecurring: () =>
-  api.get<RecurringSeriesResponse[]>('/transactions/recurring').then(r => r.data),
+    api.get<RecurringSeriesResponse[]>('/transactions/recurring').then(r => r.data),
 }
 
 // ── Categories (unificado: sistema + customizadas) ────────────────────────────
