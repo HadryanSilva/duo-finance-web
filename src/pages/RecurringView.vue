@@ -277,12 +277,16 @@ function openEdit(s: RecurringSeriesResponse) {
   showEditDialog.value = true
 }
 
-async function handleEditSubmit(payload: CreateTransactionPayload) {
+type EditRecurringFormPayload = Omit<CreateTransactionPayload, 'category'> & {
+  category: UpdateRecurringPayload['category']
+}
+
+async function handleEditSubmit(payload: EditRecurringFormPayload) {
   if (!editingSeries.value) return
   submitting.value = true
   try {
     const recurringPayload: UpdateRecurringPayload = {
-      category:         payload.category as any,
+      category:         payload.category,
       customCategoryId: payload.customCategoryId,
       amount:           payload.amount,
       description:      payload.description,
